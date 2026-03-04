@@ -1,0 +1,445 @@
+@use "../../../assets/scss/ui/import" as *;
+
+.matchSim {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  color: $darkText;
+}
+
+.matchSim__header {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  margin-bottom: 1.2rem;
+}
+
+.matchSim__headerActions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.matchSim__setupPanel {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  padding: 1rem;
+  background: #ffffff;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+}
+
+.matchSim__configGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
+  margin-bottom: 0.8rem;
+}
+
+.matchSim__teamsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.matchSim__teamCard {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 0.8rem;
+  background: #f8fbfc;
+}
+
+.matchSim__teamHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-bottom: 0.6rem;
+}
+
+.matchSim__statusPill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  background: #ffe5d2;
+  color: #78350f;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.matchSim__statusPill.is-ready {
+  background: #dbf6e3;
+  color: #166534;
+}
+
+.matchSim__control {
+  display: grid;
+  gap: 0.3rem;
+  margin-bottom: 0.6rem;
+
+  label {
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  input,
+  select {
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.45rem 0.55rem;
+    background: #ffffff;
+  }
+}
+
+.matchSim__control--lineup {
+  margin-bottom: 0.45rem;
+}
+
+.matchSim__control--seed {
+  align-content: start;
+}
+
+.matchSim__tacticsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.7rem;
+}
+
+.matchSim__lineup {
+  margin-top: 0.4rem;
+}
+
+.matchSim__playerSkillRow {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.matchSim__skillTag {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+}
+
+.matchSim__skillTag--elite {
+  background: #0f766e;
+  color: #ffffff;
+}
+
+.matchSim__skillTag--strong {
+  background: #22c55e;
+  color: #063a2f;
+}
+
+.matchSim__skillTag--good {
+  background: #d9f99d;
+  color: #365314;
+}
+
+.matchSim__skillTag--base {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.matchSim__lineupHint {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: #374151;
+}
+
+.matchSim__teamActions {
+  margin-top: 0.7rem;
+}
+
+.matchSim__startRow {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.matchSim__errorText {
+  margin-top: 0.65rem;
+  color: #991b1b;
+  font-weight: 600;
+}
+
+.matchSim__panel {
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  padding: 1rem;
+  background: #ffffff;
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.08),
+    0 2px 5px rgba(0, 0, 0, 0.06);
+}
+
+.matchSim__eventBanner {
+  border-left: 6px solid #0f766e;
+}
+
+.matchSim__kickOffRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.matchSim__phaseText {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.matchSim__resultsGrid {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.matchSim__scoreline {
+  margin-top: 0.6rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 0.7rem;
+  align-items: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.matchSim__scoreNumber {
+  font-size: 1.7rem;
+}
+
+.matchSim__winnerLine {
+  margin-top: 0.45rem;
+  font-weight: 700;
+}
+
+.matchSim__scorersGrid {
+  margin-top: 0.65rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.matchSim__scorerCol {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.5rem;
+  background: #f9fafb;
+
+  h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.9rem;
+  }
+}
+
+.matchSim__scorerRow {
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.matchSim__muted {
+  font-size: 0.85rem;
+  color: #4b5563;
+}
+
+.matchSim__statsTable {
+  margin-top: 0.7rem;
+  width: 100%;
+  border-collapse: collapse;
+
+  th,
+  td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+    text-align: left;
+    padding: 0.35rem 0.2rem;
+    font-size: 0.92rem;
+  }
+}
+
+.matchSim__keyEvents {
+  margin-top: 0.75rem;
+
+  h4 {
+    margin: 0 0 0.4rem;
+    font-size: 0.92rem;
+  }
+}
+
+.matchSim__keyEventRow {
+  font-size: 0.86rem;
+  line-height: 1.35;
+  padding: 0.14rem 0;
+}
+
+.matchSim__metricsGrid {
+  margin-top: 0.8rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.matchSim__metricCard {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.55rem;
+  background: #f9fafb;
+
+  h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.95rem;
+  }
+}
+
+.matchSim__stepActions {
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.matchSim__logList {
+  margin-top: 0.5rem;
+  max-height: 520px;
+  overflow: auto;
+  display: grid;
+  gap: 0.45rem;
+  padding-right: 0.25rem;
+}
+
+.matchSim__logItem {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.55rem;
+  background: #f9fafb;
+  font-size: 0.9rem;
+}
+
+.matchSim__logTop {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+
+.matchSim__timelineWrap {
+  margin-top: 1rem;
+}
+
+.matchSim__timelineList {
+  margin-top: 0.5rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.matchSim__timelineItem {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.55rem;
+  background: #f8fafc;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.matchSim__timelineMinute {
+  min-width: 70px;
+  text-align: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.45rem;
+  font-weight: 800;
+  color: #ffffff;
+  background: #0f766e;
+  font-size: 0.82rem;
+}
+
+.matchSim__timelineDetails {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.matchSim__timelineScore {
+  font-size: 0.85rem;
+  color: #1f2937;
+}
+
+.matchSim__debugGrid {
+  margin-top: 0.7rem;
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.matchSim__debugCard {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  padding: 0.6rem;
+  background: #f8fafc;
+
+  h4 {
+    margin: 0 0 0.45rem;
+  }
+
+  h5 {
+    margin: 0 0 0.35rem;
+    font-size: 0.84rem;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: #334155;
+  }
+}
+
+.matchSim__debugMetricsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 0.55rem;
+}
+
+.matchSim__debugBreakdownGrid {
+  display: grid;
+  gap: 0.45rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.matchSim__debugBreakdown {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 6px;
+  padding: 0.4rem;
+  background: #ffffff;
+}
+
+.matchSim__debugMetricLine {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+@media (max-width: 1020px) {
+  .matchSim__teamsGrid,
+  .matchSim__resultsGrid,
+  .matchSim__scorersGrid,
+  .matchSim__metricsGrid,
+  .matchSim__debugGrid,
+  .matchSim__debugMetricsGrid,
+  .matchSim__debugBreakdownGrid,
+  .matchSim__tacticsGrid,
+  .matchSim__configGrid {
+    grid-template-columns: 1fr;
+  }
+}

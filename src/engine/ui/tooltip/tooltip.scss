@@ -1,4 +1,4 @@
-@import "../../../assets/scss/ui/import";
+@use "../../../assets/scss/ui/import" as *;
 
 .tooltipRoot {
   position: relative;

@@ -28,4 +28,11 @@
       margin-bottom: 3rem;
     }
   }
+
+  &_actions {
+    display: flex;
+    gap: 0.8rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
 }

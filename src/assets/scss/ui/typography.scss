@@ -1,5 +1,6 @@
 /* Typography system */
 
+@use "./colours" as *;
 
 /* Primary font */
 $fontPrimary: "Geom", system-ui, -apple-system, BlinkMacSystemFont,

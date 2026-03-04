@@ -1,4 +1,4 @@
-@import "./assets/scss/ui/import";
+@use "./assets/scss/ui/import" as *;
 
 /* Any global resets or app-level styles below */
 :root {
