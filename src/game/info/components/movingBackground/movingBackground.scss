@@ -1,0 +1,42 @@
+.movingBackground {
+  position: relative;
+  min-height: 100vh;
+}
+
+.movingBackground__bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+
+  background-image: var(--mb-image);
+  background-repeat: no-repeat;
+
+  /*
+    Zoom: if ~60% visible -> background-size ~ 166%
+    This makes the image appear "zoomed in".
+  */
+  background-size: var(--mb-size);
+
+  /*
+    Start at top-left and move towards bottom-right as user scrolls
+  */
+  background-position: var(--mb-pos-x) var(--mb-pos-y);
+
+  /*
+    Smooths the feel slightly without lagging scroll too much
+  */
+  transition: background-position 0.06s linear;
+
+  /* Black overlay to dull the image */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, var(--mb-overlay));
+  }
+}
+
+.movingBackground__content {
+  position: relative;
+  z-index: 1;
+}

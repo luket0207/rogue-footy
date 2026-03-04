@@ -1,0 +1,759 @@
+@import "../../assets/scss/ui/import";
+
+.info {
+  padding: 1.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+
+  color: $primaryForeground;
+}
+
+.info__header--spaced {
+  margin-top: 3rem;
+}
+
+.info__header {
+  margin-bottom: 1.5rem;
+}
+
+.info__title {
+  margin: 0;
+  font-size: 2rem;
+  line-height: 1.2;
+}
+
+.info__subtitle {
+  margin: 0.5rem 0 0;
+  font-size: 1rem;
+  opacity: 0.85;
+  max-width: 70ch;
+}
+
+/* Layout */
+.info__layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+/* Navigation */
+.info__nav {
+  position: sticky;
+  top: 1rem;
+
+  border-radius: 12px;
+  padding: 1rem;
+
+  background: $secondaryBackground;
+  color: $secondaryForeground;
+}
+
+.info__navTitle {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  margin-bottom: 0.75rem;
+}
+
+.info__navList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.info__navItem {
+  width: 100%;
+  text-align: left;
+
+  border: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: $secondaryForeground;
+
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  font-size: 0.95rem;
+
+  transition:
+    background-color 0.15s ease,
+    transform 0.06s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+}
+
+.info__navFooter {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.info__navTitle--small {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  opacity: 0.9;
+}
+
+.info__navCatalogList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.info__navCatalogBtn {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 0.6rem 0.75rem;
+  border-radius: 10px;
+}
+
+/* Content */
+.info__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.info__section {
+  scroll-margin-top: 1.25rem;
+}
+
+.info__sectionCard {
+  border-radius: 12px;
+  overflow: hidden;
+
+  background: $primaryBackground;
+  color: $primaryForeground;
+}
+
+.info__sectionHeader {
+  padding: 1rem 1rem 0.75rem;
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.info__sectionTitle {
+  margin: 0;
+  font-size: 1.25rem;
+  line-height: 1.2;
+}
+
+.info__sectionDesc {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+  max-width: 80ch;
+}
+
+.info__sectionBody {
+  padding: 1rem;
+}
+
+/* Theme section helpers (uses global SCSS variables) */
+.info__themeRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.info__themeSwatch {
+  border-radius: 12px;
+  padding: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+}
+
+.info__themeSwatchTitle {
+  font-weight: 800;
+  margin-bottom: 0.25rem;
+}
+
+.info__themeSwatchMeta {
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.info__themeSwatch--primary {
+  background: $primaryBackground;
+  color: $primaryForeground;
+}
+
+.info__themeSwatch--secondary {
+  background: $secondaryBackground;
+  color: $secondaryForeground;
+}
+
+.info__themeSwatch--tertiary {
+  background: $tertiaryBackground;
+  color: $tertiaryForeground;
+}
+
+.info__typographyDemo {
+  margin-top: 0.75rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+/* Examples */
+.info__examplesRow {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.info__example {
+  border-radius: 10px;
+  padding: 0.9rem;
+
+  background: rgba(255, 255, 255, 0.12);
+  color: $primaryForeground;
+
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info__exampleTitle {
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.info__exampleDesc {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+.info__exampleBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info__result {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .info__layout {
+    grid-template-columns: 1fr;
+  }
+
+  .info__nav {
+    position: relative;
+    top: auto;
+  }
+
+  .info__examplesRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info__iconRow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.info__buttonRow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.info__btnIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 0.5rem;
+
+  &--right {
+    margin-right: 0;
+    margin-left: 0.5rem;
+  }
+}
+
+.info__example--full {
+  grid-column: 1 / -1;
+}
+
+.info__formGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.info__formRow {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.info__formLabel {
+  font-weight: 700;
+}
+
+.info__formInline {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.info__formHint {
+  font-size: 0.9rem;
+  opacity: 0.85;
+}
+
+/* Toast */
+
+.info__toastLog {
+  margin-top: 1rem;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.92);
+  padding: 0.9rem;
+  padding-bottom: 1.2rem;
+}
+
+.info__toastLogHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.6rem;
+  color: $primaryBackground;
+}
+
+.info__toastLogTitle {
+  font-weight: 800;
+}
+
+.info__toastLogList {
+  max-height: 210px; /* roughly ~5 items depending on font size */
+  overflow: auto;
+  padding-right: 6px;
+
+  display: grid;
+  gap: 8px;
+}
+
+.info__toastLogEmpty {
+  opacity: 0.8;
+  color: $darkText;
+}
+
+.info__toastLogItem {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 10px;
+  align-items: start;
+
+  border-radius: 10px;
+  padding: 8px 10px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.info__toastLogBadge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: #ffffff;
+  line-height: 1.1rem;
+  white-space: nowrap;
+}
+
+.info__toastLogBadge--success {
+  background: #1f6f54;
+}
+.info__toastLogBadge--warning {
+  background: #9a6b12;
+}
+.info__toastLogBadge--error {
+  background: #b42318;
+}
+.info__toastLogBadge--info {
+  background: #115752;
+}
+
+.info__toastLogMsg {
+  line-height: 1.2rem;
+  color: $primaryBackground;
+}
+
+/* Bars */
+
+.info__barsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .info__barsGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info__barsCol {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.info__barsLabel {
+  font-weight: 800;
+}
+
+.info__barsSliderRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.info__barsValue {
+  min-width: 38px;
+  text-align: right;
+  font-weight: 800;
+}
+
+/* Slide Panel */
+
+.info__panelControls {
+  display: grid;
+  grid-template-columns: 320px auto;
+  gap: 1rem;
+  align-items: end;
+}
+
+@media (max-width: 900px) {
+  .info__panelControls {
+    grid-template-columns: 1fr;
+    align-items: stretch;
+  }
+}
+
+.info__panelControl {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.info__panelContent {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info__panelTitle {
+  margin: 0;
+}
+
+.info__panelDesc {
+  margin: 0;
+  opacity: 0.9;
+}
+
+.info__panelButtons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Tooltips */
+
+.info__tooltipGrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(90px, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .info__tooltipGrid {
+    grid-template-columns: repeat(4, minmax(90px, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .info__tooltipGrid {
+    grid-template-columns: repeat(2, minmax(90px, 1fr));
+  }
+}
+
+.info__tooltipItem {
+  display: grid;
+  justify-items: center;
+  gap: 0.5rem;
+
+  svg {
+    color: $secondaryBackground;
+  }
+}
+
+.info__tooltipLabel {
+  font-weight: 800;
+  font-size: 0.9rem;
+  opacity: 0.92;
+}
+
+/* Game Context Stuff */
+
+.info__gameCtxGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.info__gameCtxControl {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.info__colorBoxes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.info__colorBox {
+  height: 64px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+/* Color mappings (simple, explicit) */
+.info__colorBox--red {
+  background: #ef4444;
+}
+
+.info__colorBox--green {
+  background: #22c55e;
+}
+
+.info__colorBox--blue {
+  background: #3b82f6;
+}
+
+.info__colorBox--yellow {
+  background: #facc15;
+}
+
+.info__colorBox--purple {
+  background: #a855f7;
+}
+
+.info__colorBox--teal {
+  background: #14b8a6;
+}
+
+.info__colorBox--orange {
+  background: #f97316;
+}
+
+.info__colorBox--pink {
+  background: #ec4899;
+}
+
+@media (max-width: 900px) {
+  .info__gameCtxGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .info__colorBoxes {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Save */
+
+.info__saveLoadActions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+
+.info__hiddenFileInput {
+  display: none;
+}
+
+/* Timer */
+
+.info__timerTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.info__timerDisplay {
+  min-width: 140px;
+  height: 56px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+
+  font-size: 1.3rem;
+  font-weight: 700;
+  background: #ffffff;
+}
+
+.info__timerDone {
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.info__timerControls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.info__timerControl {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.info__timerControlHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.info__timerControlTitle {
+  font-weight: 700;
+}
+
+.info__timerControlValue {
+  opacity: 0.9;
+}
+
+@media (max-width: 900px) {
+  .info__timerControls {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Make Decision */
+
+.info__decisionTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.info__decisionCount {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.info__decisionCountLabel {
+  font-weight: 800;
+  opacity: 0.95;
+}
+
+.info__decisionGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-top: 1rem;
+}
+
+.info__decisionCard {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  background: #ffffff;
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.6rem;
+  align-content: start;
+}
+
+@keyframes decisionPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 rgba(0, 0, 0, 0.18);
+  }
+
+  40% {
+    transform: scale(1.05);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.18);
+  }
+}
+
+.info__decisionCard--winner {
+  /* Animation runs once, lasts 0.5s */
+  animation: decisionPulse 0.5s ease-out;
+}
+
+.info__decisionIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 52px;
+  color: $secondaryBackground;
+}
+
+.info__decisionLabel {
+  text-align: center;
+  font-weight: 800;
+  color: $secondaryBackground;
+}
+
+.info__decisionSliderRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.info__decisionWeight {
+  min-width: 36px;
+  text-align: right;
+  font-weight: 800;
+  color: $secondaryBackground;
+}
+
+@media (max-width: 1100px) {
+  .info__decisionGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .info__decisionGrid {
+    grid-template-columns: 1fr;
+  }
+}

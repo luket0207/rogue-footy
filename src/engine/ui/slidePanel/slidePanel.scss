@@ -1,0 +1,129 @@
+@import "../../../assets/scss/ui/import";
+
+.slidePanelOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2500;
+  pointer-events: none;
+}
+
+.slidePanelOverlay.is-open {
+  pointer-events: auto;
+}
+
+.slidePanelOverlay__backdrop {
+  position: absolute;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+
+  transition: opacity 0.5s ease;
+}
+
+.slidePanelOverlay.is-open .slidePanelOverlay__backdrop {
+  opacity: 1;
+}
+
+.slidePanel {
+  position: absolute;
+  background: #ffffff;
+  color: #111;
+
+  box-shadow:
+    0 18px 40px rgba(0, 0, 0, 0.26),
+    0 8px 18px rgba(0, 0, 0, 0.18);
+
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  /* GPU-friendly transform animation */
+  transition: transform 0.5s cubic-bezier(0.2, 0.9, 0.2, 1);
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.slidePanel__header {
+  flex: 0 0 auto;
+  padding: 12px;
+  min-height: 56px;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.96);
+}
+
+.slidePanel__content {
+  flex: 1 1 auto;
+  overflow: auto;
+  padding: 1rem;
+
+  /* Prevent scrollbar layout shift during animation */
+  scrollbar-gutter: stable;
+}
+
+.slidePanel__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.95);
+  color: #111;
+
+  cursor: pointer;
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+  }
+}
+
+/* Edge variants – CLOSED state */
+.slidePanel--left {
+  top: 0;
+  left: 0;
+  height: var(--sp-height, 100vh);
+  width: var(--sp-width, 400px);
+  transform: translate3d(-102%, 0, 0);
+}
+
+.slidePanel--right {
+  top: 0;
+  right: 0;
+  height: var(--sp-height, 100vh);
+  width: var(--sp-width, 400px);
+  transform: translate3d(102%, 0, 0);
+}
+
+.slidePanel--top {
+  top: 0;
+  left: 0;
+  width: var(--sp-width, 100%);
+  height: var(--sp-height, 400px);
+  transform: translate3d(0, -102%, 0);
+}
+
+.slidePanel--bottom {
+  bottom: 0;
+  left: 0;
+  width: var(--sp-width, 100%);
+  height: var(--sp-height, 400px);
+  transform: translate3d(0, 102%, 0);
+}
+
+/* OPEN state */
+.slidePanel.is-open {
+  transform: translate3d(0, 0, 0);
+}

@@ -1,0 +1,181 @@
+@import "../../../assets/scss/ui/import";
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0.6rem 1.2rem;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+
+  cursor: pointer;
+  user-select: none;
+
+  border: none;
+  text-decoration: none;
+
+  /* Enhanced transitions for a more "premium" feel */
+  transition:
+    transform 0.3s cubic-bezier(0.2, 0.9, 0.2, 1),
+    box-shadow 0.3s cubic-bezier(0.2, 0.9, 0.2, 1),
+    opacity 0.4s ease,
+    filter 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
+
+  /* Needed for the hover highlight overlay */
+  position: relative;
+  overflow: hidden;
+
+  /* If this is a Link (<a>), prevent browser link styling. */
+  &:visited,
+  &:hover,
+  &:active,
+  &:focus {
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 2px;
+  }
+
+  /* Elegant highlight overlay */
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+
+    /* Soft diagonal shine */
+    background: linear-gradient(
+      120deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.14) 35%,
+      rgba(255, 255, 255, 0.06) 55%,
+      rgba(255, 255, 255, 0) 100%
+    );
+
+    opacity: 0;
+    transition: opacity 0.16s ease;
+  }
+
+  /* More obvious, elegant hover effect */
+  &:hover {
+    transform: translateY(-2px);
+
+    /* Two-layer shadow: soft ambient + key shadow */
+    box-shadow:
+      0 10px 26px rgba(0, 0, 0, 0.18),
+      0 4px 10px rgba(0, 0, 0, 0.16);
+
+    filter: brightness(1.04);
+  }
+
+  &:hover::after {
+    opacity: 1;
+  }
+
+  &:active {
+    transform: translateY(-1px);
+    box-shadow:
+      0 6px 18px rgba(0, 0, 0, 0.18),
+      0 3px 8px rgba(0, 0, 0, 0.16);
+    filter: brightness(1.01);
+  }
+
+  &--primary {
+    background-color: $primaryBackground;
+    color: $primaryForeground;
+
+    /* Keep text colour stable across link pseudo-states */
+    &:visited,
+    &:hover,
+    &:active,
+    &:focus {
+      color: $primaryForeground;
+    }
+  }
+
+  &--secondary {
+    background-color: $secondaryBackground;
+    color: $secondaryForeground;
+
+    /* Keep text colour stable across link pseudo-states */
+    &:visited,
+    &:hover,
+    &:active,
+    &:focus {
+      color: $secondaryForeground;
+    }
+  }
+
+  &--tertiary {
+    background-color: $tertiaryBackground;
+    color: $tertiaryForeground;
+
+    /* Optional: a subtle border so it still reads as a button */
+    border: 1px solid rgba(0, 0, 0, 0.18);
+
+    /* Keep text colour stable across link pseudo-states */
+    &:visited,
+    &:hover,
+    &:active,
+    &:focus {
+      color: $tertiaryForeground;
+    }
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+
+    transform: none;
+    box-shadow: none;
+    filter: none;
+
+    &::after {
+      opacity: 0;
+    }
+  }
+}
+
+/* Anchor-specific hardening: ensure Link buttons never turn blue/purple */
+a.btn,
+a.btn:visited,
+a.btn:hover,
+a.btn:active,
+a.btn:focus {
+  text-decoration: none;
+}
+
+/* Native button disabled state (non-Link buttons) */
+button.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--image {
+  padding: 0;
+  line-height: 0;
+  background: transparent;
+
+  &:hover {
+    transform: translateY(0);
+    box-shadow: none;
+  }
+
+  &::after {
+    display: none;
+  }
+}
+
+
+.btn--image img {
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  user-select: none;
+  pointer-events: none; /* clicks go to the button/link */
+}

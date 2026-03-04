@@ -1,0 +1,188 @@
+@import "../../../assets/scss/ui/import";
+
+.tooltipRoot {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.tooltipTrigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+
+  cursor: pointer;
+  user-select: none;
+
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  background: rgba(255, 255, 255, 0.9);
+
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.14);
+  }
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 2px;
+  }
+}
+
+.tooltipBubble {
+  position: absolute;
+  z-index: 9999;
+
+  /* Critical for portal: JS sets top/left; CSS must not override with bottom/right rules */
+  top: 0;
+  left: 0;
+
+  /* Let content define size */
+  display: inline-block;
+  width: max-content;
+
+  /* Clamp */
+  max-width: 320px;
+
+  /* Wrap nicely */
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+
+  border-radius: 12px;
+  padding: 10px 12px;
+
+  color: #ffffff;
+  font-size: 0.92rem;
+  line-height: 1.2rem;
+
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.22),
+    0 6px 14px rgba(0, 0, 0, 0.16);
+
+  opacity: 0;
+  pointer-events: none;
+
+  /* Default "top" animation */
+  transform: translateY(-6px) scale(0.98);
+
+  transition: opacity 0.16s ease, transform 0.16s ease;
+
+  &.is-open {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+}
+
+.tooltipBubble__inner {
+  display: inline; /* prevents odd block behavior that can look like text is "below" */
+  strong {
+    font-weight: 800;
+  }
+}
+
+/* Placement modifiers now ONLY control animation direction (NOT positioning) */
+.tooltipBubble--top {
+  transform: translateY(-6px) scale(0.98);
+
+  &.is-open {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltipBubble--bottom {
+  transform: translateY(6px) scale(0.98);
+
+  &.is-open {
+    transform: translateY(0) scale(1);
+  }
+}
+
+.tooltipBubble--right {
+  transform: translateX(6px) scale(0.98);
+
+  &.is-open {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.tooltipBubble--left {
+  transform: translateX(-6px) scale(0.98);
+
+  &.is-open {
+    transform: translateX(0) scale(1);
+  }
+}
+
+.tooltipArrow {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  transform: rotate(45deg);
+  background: inherit;
+}
+
+/* Arrow positioning relative to the bubble */
+.tooltipArrow--top {
+  bottom: -5px;
+  left: 50%;
+  margin-left: -5px;
+}
+
+.tooltipArrow--bottom {
+  top: -5px;
+  left: 50%;
+  margin-left: -5px;
+}
+
+.tooltipArrow--right {
+  left: -5px;
+  top: 50%;
+  margin-top: -5px;
+}
+
+.tooltipArrow--left {
+  right: -5px;
+  top: 50%;
+  margin-top: -5px;
+}
+
+/* Types (success/warning/error/info) */
+.tooltipBubble--success {
+  background: #1f6f54;
+}
+
+.tooltipBubble--warning {
+  background: #9a6b12;
+}
+
+.tooltipBubble--error {
+  background: #b42318;
+}
+
+.tooltipBubble--info {
+  background: #ffffff;
+  color: $darkText;
+}
+
+/* Theme-mapped types (use global SCSS variables) */
+.tooltipBubble--primary {
+  background: $primaryBackground;
+  color: $primaryForeground;
+}
+
+.tooltipBubble--secondary {
+  background: $secondaryBackground;
+  color: $secondaryForeground;
+}
+
+.tooltipBubble--tertiary {
+  background: $tertiaryBackground;
+  color: $tertiaryForeground;
+}

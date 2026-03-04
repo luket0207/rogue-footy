@@ -1,0 +1,96 @@
+@import "../../../assets/scss/ui/import";
+
+.toastViewport {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+
+  display: grid;
+  gap: 10px;
+
+  width: min(360px, calc(100vw - 32px));
+}
+
+@keyframes toastIn {
+  0% {
+    opacity: 0;
+    transform: translateY(-6px) translateX(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+}
+
+@keyframes toastOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) translateX(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px) translateX(8px);
+  }
+}
+
+.toast {
+  appearance: none;
+  border: none;
+  background: #111827;
+  color: #ffffff;
+
+  border-radius: 12px;
+  padding: 12px 14px;
+
+  text-align: left;
+  cursor: pointer;
+
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.26),
+    0 6px 14px rgba(0, 0, 0, 0.18);
+
+  animation: toastIn 0.22s ease-out both;
+
+  display: grid;
+  gap: 4px;
+
+  &:focus-visible {
+    outline: 2px solid rgba(255, 255, 255, 0.65);
+    outline-offset: 2px;
+  }
+}
+
+.toast--exit {
+  animation: toastOut 0.26s ease-in both;
+}
+
+.toast__title {
+  font-weight: 800;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  opacity: 0.95;
+}
+
+.toast__message {
+  font-size: 0.95rem;
+  line-height: 1.2rem;
+  opacity: 0.98;
+}
+
+/* Type styling */
+.toast--success {
+  background: #1f6f54; /* moss green vibe */
+}
+
+.toast--warning {
+  background: #9a6b12;
+}
+
+.toast--error {
+  background: #b42318;
+}
+
+.toast--info {
+  background: #115752; /* ties to your primary teal */
+}
