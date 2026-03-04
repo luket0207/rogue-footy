@@ -80,61 +80,28 @@ const pickPossessionTeam = (chanceA, rng) =>
     rng
   );
 
-const SCORER_ROLE_WEIGHTS = Object.freeze({
-  [POSITION.FWR]: Object.freeze({
-    finishing: 0.55,
-    offBall: 0.22,
-    control: 0.12,
-    passing: 0.06,
-    workRate: 0.05,
-  }),
-  [POSITION.MID]: Object.freeze({
-    finishing: 0.36,
-    offBall: 0.2,
-    control: 0.18,
-    passing: 0.14,
-    workRate: 0.12,
-  }),
-  [POSITION.DEF]: Object.freeze({
-    finishing: 0.24,
-    offBall: 0.16,
-    control: 0.18,
-    passing: 0.22,
-    workRate: 0.2,
-  }),
-  [POSITION.GK]: Object.freeze({
-    finishing: 0.08,
-    offBall: 0.08,
-    control: 0.2,
-    passing: 0.24,
-    workRate: 0.2,
-    goalkeeping: 0.2,
-  }),
+const SCORER_ROLE_MULTIPLIER = Object.freeze({
+  [POSITION.FWR]: 1.0,
+  [POSITION.MID]: 0.62,
+  [POSITION.DEF]: 0.34,
+  [POSITION.GK]: 0,
 });
 
 const getScorerWeight = (player, assignedRole) => {
-  const roleWeights = SCORER_ROLE_WEIGHTS[assignedRole];
+  if (assignedRole === POSITION.GK) return 0;
+
+  const roleMultiplier = SCORER_ROLE_MULTIPLIER[assignedRole] || SCORER_ROLE_MULTIPLIER[POSITION.DEF];
   const fit = applyPositionFit(player.preferredPos, assignedRole);
-
-  const rawWeight =
-    Object.entries(roleWeights).reduce((score, [attribute, weight]) => {
-      return score + player[attribute] * weight;
-    }, 0) * fit;
-
-  return clamp(rawWeight, 1, 200);
+  // Finishing dominates scorer selection, with a smaller support term.
+  const finishingCore = Math.pow(Math.max(1, player.finishing), 1.45);
+  const support = player.offBall * 0.45 + player.control * 0.2 + player.passing * 0.15 + player.workRate * 0.1;
+  const rawWeight = (finishingCore + support) * roleMultiplier * fit;
+  return clamp(rawWeight, 0, 10000);
 };
 
 const buildScorerWeights = (teamProfile, playersById) => {
   const entries = [];
   const { lineup } = teamProfile;
-
-  if (lineup.gkId && playersById[lineup.gkId]) {
-    entries.push({
-      playerId: lineup.gkId,
-      role: POSITION.GK,
-      player: playersById[lineup.gkId],
-    });
-  }
 
   [POSITION.DEF, POSITION.MID, POSITION.FWR].forEach((role) => {
     lineup[role].forEach((playerId) => {
@@ -149,7 +116,7 @@ const buildScorerWeights = (teamProfile, playersById) => {
   });
 
   return entries.reduce((weights, entry) => {
-    weights[entry.playerId] = getScorerWeight(entry.player, entry.role);
+    weights[entry.playerId] = Math.max(0, getScorerWeight(entry.player, entry.role));
     return weights;
   }, {});
 };

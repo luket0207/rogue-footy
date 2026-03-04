@@ -10,11 +10,19 @@ import MatchDebug from "./matchDebug";
 import GoalOverlay from "./GoalOverlay";
 import "./matchScreen.scss";
 
+const MATCH_SPEED_OPTIONS = Object.freeze([
+  { key: "VERY_FAST", label: "Very Fast", seconds: 0.3 },
+  { key: "FAST", label: "Fast", seconds: 1 },
+  { key: "NORMAL", label: "Normal", seconds: 2 },
+  { key: "SLOW", label: "Slow", seconds: 3 },
+]);
+
 const Match = () => {
   const { gameState } = useGame();
   const pendingConfig = gameState.match?.pendingConfig || null;
 
-  const { matchState, isPlaying, goalOverlayEvent, initializeMatch, kickOff, resetMatch } = useMatchSim();
+  const { matchState, isPlaying, goalOverlayEvent, playbackSpeed, initializeMatch, kickOff, resetMatch, setPlaybackSpeed } =
+    useMatchSim();
 
   useEffect(() => {
     if (!pendingConfig) return;
@@ -77,6 +85,20 @@ const Match = () => {
           <div className="matchSim__phaseText">
             Phase: {matchState.phase === "pre_kickoff" ? "Ready" : matchState.phase}
           </div>
+        </div>
+
+        <div className="matchSim__speedRow">
+          <div className="matchSim__speedLabel">Match Speed:</div>
+          {MATCH_SPEED_OPTIONS.map((option) => (
+            <Button
+              key={option.key}
+              variant={playbackSpeed === option.key ? BUTTON_VARIANT.PRIMARY : BUTTON_VARIANT.SECONDARY}
+              onClick={() => setPlaybackSpeed(option.key)}
+              disabled={matchState.phase === "finished"}
+            >
+              {option.label} ({option.seconds}s)
+            </Button>
+          ))}
         </div>
       </section>
 

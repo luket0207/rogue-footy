@@ -28,16 +28,36 @@ const EMPTY_MATCH_STATE = Object.freeze({
   setup: null,
 });
 
-const CHUNK_PLAYBACK_MS = 1500;
-const BANNER_VISIBLE_MS = 3000;
-const GOAL_OVERLAY_MS = 1500;
+const PLAYBACK_SPEED = Object.freeze({
+  VERY_FAST: "VERY_FAST",
+  FAST: "FAST",
+  NORMAL: "NORMAL",
+  SLOW: "SLOW",
+});
+
+const PLAYBACK_SPEED_MS = Object.freeze({
+  [PLAYBACK_SPEED.VERY_FAST]: 300,
+  [PLAYBACK_SPEED.FAST]: 1000,
+  [PLAYBACK_SPEED.NORMAL]: 2000,
+  [PLAYBACK_SPEED.SLOW]: 3000,
+});
+
+const GOAL_EVENT_VISIBLE_MS = 3000;
+const GOAL_OVERLAY_MS = 3000;
 
 const getOpposingTeamId = (teamId) => (teamId === TEAM_KEY.A ? TEAM_KEY.B : TEAM_KEY.A);
+const isValidPlaybackSpeed = (speed) => Object.prototype.hasOwnProperty.call(PLAYBACK_SPEED_MS, speed);
+const getEventVisibleMs = (event, baseSpeedMs) => (event?.kind === EVENT_KIND.GOAL ? GOAL_EVENT_VISIBLE_MS : baseSpeedMs);
+const getSequenceVisibleMs = (events, baseSpeedMs) => {
+  if (!Array.isArray(events) || events.length === 0) return baseSpeedMs;
+  return events.reduce((sum, event) => sum + getEventVisibleMs(event, baseSpeedMs), 0);
+};
 
 export const useMatchSim = () => {
   const [matchState, setMatchState] = useState(EMPTY_MATCH_STATE);
   const [isPlaying, setIsPlaying] = useState(false);
   const [goalOverlayEvent, setGoalOverlayEvent] = useState(null);
+  const [playbackSpeed, setPlaybackSpeedState] = useState(PLAYBACK_SPEED.NORMAL);
 
   const contextRef = useRef(null);
   const timerRef = useRef(null);
@@ -45,10 +65,15 @@ export const useMatchSim = () => {
   const kickoffTeamRef = useRef(TEAM_KEY.A);
   const bannerTimersRef = useRef([]);
   const goalOverlayTimerRef = useRef(null);
+  const playbackSpeedRef = useRef(PLAYBACK_SPEED.NORMAL);
 
   useEffect(() => {
     latestStateRef.current = matchState;
   }, [matchState]);
+
+  useEffect(() => {
+    playbackSpeedRef.current = playbackSpeed;
+  }, [playbackSpeed]);
 
   const clearTimeoutList = useCallback((timersRef) => {
     timersRef.current.forEach((timerId) => clearTimeout(timerId));
@@ -74,17 +99,21 @@ export const useMatchSim = () => {
   const showEventSequence = useCallback(
     (events) => {
       if (!Array.isArray(events) || events.length === 0) return;
+      const baseSpeedMs = PLAYBACK_SPEED_MS[playbackSpeedRef.current];
 
       clearTimeoutList(bannerTimersRef);
-      events.forEach((event, index) => {
+      let offsetMs = 0;
+      events.forEach((event) => {
+        const eventDurationMs = getEventVisibleMs(event, baseSpeedMs);
         const timeoutId = setTimeout(() => {
           setMatchState((previousState) => {
             const nextState = { ...previousState, currentEvent: event };
             latestStateRef.current = nextState;
             return nextState;
           });
-        }, index * BANNER_VISIBLE_MS);
+        }, offsetMs);
         bannerTimersRef.current.push(timeoutId);
+        offsetMs += eventDurationMs;
       });
 
       const clearBannerTimeoutId = setTimeout(() => {
@@ -93,7 +122,7 @@ export const useMatchSim = () => {
           latestStateRef.current = nextState;
           return nextState;
         });
-      }, events.length * BANNER_VISIBLE_MS);
+      }, offsetMs);
       bannerTimersRef.current.push(clearBannerTimeoutId);
     },
     [clearTimeoutList]
@@ -185,7 +214,10 @@ export const useMatchSim = () => {
 
       timerRef.current = createTimer({
         duration,
-        frequencyMs: CHUNK_PLAYBACK_MS,
+        frequencyMs: getSequenceVisibleMs(
+          state.latestChunkEvents,
+          PLAYBACK_SPEED_MS[playbackSpeedRef.current]
+        ),
         onTick: () => {
           const previousState = latestStateRef.current;
           const steppedState = runNextChunk({ ...previousState, status: "running" }, context);
@@ -221,8 +253,10 @@ export const useMatchSim = () => {
             triggerGoalOverlay(goalEvent);
           }
 
-          const eventDelay = steppedState.latestChunkEvents.length * BANNER_VISIBLE_MS;
-          const nextChunkDelay = Math.max(CHUNK_PLAYBACK_MS, eventDelay);
+          const nextChunkDelay = getSequenceVisibleMs(
+            steppedState.latestChunkEvents,
+            PLAYBACK_SPEED_MS[playbackSpeedRef.current]
+          );
           if (timerRef.current) {
             timerRef.current.setFrequencyMs(nextChunkDelay);
           }
@@ -256,8 +290,6 @@ export const useMatchSim = () => {
       targetChunk = halfChunk;
     } else if (state.phase === "half_time") {
       targetChunk = context.chunkCount;
-    } else if (state.phase === "goal_pause" && state.chunk < context.chunkCount) {
-      targetChunk = state.chunk < halfChunk ? halfChunk : context.chunkCount;
     } else if (state.status === "paused" && state.chunk < context.chunkCount) {
       targetChunk = state.chunk < halfChunk ? halfChunk : context.chunkCount;
     }
@@ -306,16 +338,23 @@ export const useMatchSim = () => {
     setMatchState(EMPTY_MATCH_STATE);
   }, [clearTimeoutList, stopTimer]);
 
+  const setPlaybackSpeed = useCallback((nextSpeed) => {
+    if (!isValidPlaybackSpeed(nextSpeed)) return;
+    setPlaybackSpeedState(nextSpeed);
+  }, []);
+
   return useMemo(
     () => ({
       matchState,
       isPlaying,
       goalOverlayEvent,
+      playbackSpeed,
       initializeMatch,
       kickOff,
       resetMatch,
       clearMatch,
+      setPlaybackSpeed,
     }),
-    [clearMatch, goalOverlayEvent, initializeMatch, isPlaying, kickOff, matchState, resetMatch]
+    [clearMatch, goalOverlayEvent, initializeMatch, isPlaying, kickOff, matchState, playbackSpeed, resetMatch, setPlaybackSpeed]
   );
 };
