@@ -7,18 +7,20 @@ import Scoreboard from "./scoreboard";
 import MatchLog from "./MatchLog";
 import MatchTimeline from "./MatchTimeline";
 import MatchDebug from "./matchDebug";
+import GoalOverlay from "./GoalOverlay";
 import "./matchScreen.scss";
 
 const Match = () => {
   const { gameState } = useGame();
   const pendingConfig = gameState.match?.pendingConfig || null;
 
-  const { matchState, isPlaying, initializeMatch, kickOff, resetMatch } = useMatchSim();
+  const { matchState, isPlaying, goalOverlayEvent, initializeMatch, kickOff, resetMatch } = useMatchSim();
 
   useEffect(() => {
     if (!pendingConfig) return;
+    if (matchState.status !== "idle") return;
     initializeMatch(pendingConfig);
-  }, [initializeMatch, pendingConfig]);
+  }, [initializeMatch, matchState.status, pendingConfig]);
 
   const kickOffLabel = useMemo(() => {
     if (matchState.phase === "half_time") return "Kick Off Second Half";
@@ -43,6 +45,8 @@ const Match = () => {
 
   return (
     <div className="matchSim">
+      <GoalOverlay event={goalOverlayEvent} setup={matchState.setup} />
+
       <header className="matchSim__header">
         <div>
           <h1>Match</h1>

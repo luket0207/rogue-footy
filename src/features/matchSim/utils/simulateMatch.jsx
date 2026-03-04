@@ -3,7 +3,16 @@ import { clamp, logistic } from "./math";
 import { createSeededRng } from "./seededRng";
 import { applyTeamTactics } from "./tactics";
 import { applyPositionFit, computeTeamProfile, playersArrayToMap } from "./ratings";
-import { POSITION, TEAM_KEY } from "./matchSimTypes";
+import {
+  CHUNK_MINUTES,
+  DEFAULT_CHUNK_COUNT,
+  EVENT_KIND,
+  MATCH_HALF,
+  MATCH_TOTAL_MINUTES,
+  POSITION,
+  TEAM_KEY,
+} from "./matchSimTypes";
+import { generateChunkEvents } from "./commentary";
 
 // 6-a-side tuning: fewer players, more space, and faster transitions should
 // produce more chances and slightly better conversion than 11-a-side baselines.
@@ -44,13 +53,16 @@ const createInitialStats = () => ({
   [TEAM_KEY.B]: createTeamStats(),
 });
 
-const MATCH_MINUTES = 60;
-const HALF_TIME_MINUTE = 30;
+const getChunkMinuteBounds = (chunkIndex) => {
+  const minuteStart = (chunkIndex - 1) * CHUNK_MINUTES + 1;
+  const minuteEnd = Math.min(MATCH_TOTAL_MINUTES, minuteStart + 1);
+  return {
+    minuteStart,
+    minuteEnd,
+  };
+};
 
-const getMinuteFromChunk = (chunk, chunkCount) =>
-  clamp(Math.round((chunk / chunkCount) * MATCH_MINUTES), 1, MATCH_MINUTES);
-
-const getHalfFromMinute = (minute) => (minute <= HALF_TIME_MINUTE ? 1 : 2);
+export const getHalfForMinute = (minute) => (minute > MATCH_TOTAL_MINUTES / 2 ? MATCH_HALF.H2 : MATCH_HALF.H1);
 
 const nextTeamKey = (teamKey) => (teamKey === TEAM_KEY.A ? TEAM_KEY.B : TEAM_KEY.A);
 
@@ -142,7 +154,7 @@ const buildScorerWeights = (teamProfile, playersById) => {
   }, {});
 };
 
-export const createMatchContext = ({ seed, chunkCount, players, teamA, teamB }) => {
+export const createMatchContext = ({ seed, chunkCount = DEFAULT_CHUNK_COUNT, players, teamA, teamB }) => {
   const playersById = playersArrayToMap(players);
 
   const baseA = computeTeamProfile(teamA, playersById);
@@ -193,44 +205,18 @@ export const createInitialMatchState = (context, mode) => ({
   stats: createInitialStats(),
   log: [],
   goalsTimeline: [],
+  latestChunkEvents: [],
   currentEvent: null,
   winner: null,
+  pauseForGoal: false,
   lastPossession: null,
+  lastGoalEvent: null,
   teamSnapshots: {
     [TEAM_KEY.A]: context.teams[TEAM_KEY.A],
     [TEAM_KEY.B]: context.teams[TEAM_KEY.B],
   },
   setup: context.setup,
 });
-
-const buildChunkMessage = ({
-  possessingTeamName,
-  possessionSwing,
-  chanceCreated,
-  xg,
-  goalScored,
-  goalScorerName,
-  minute,
-  half,
-  scoreA,
-  scoreB,
-}) => {
-  const minuteLabel = `${minute}'`;
-
-  if (goalScored) {
-    return `${minuteLabel} H${half} GOAL ${possessingTeamName} (${goalScorerName}) xG ${xg.toFixed(2)} score ${scoreA}-${scoreB}`;
-  }
-
-  if (chanceCreated) {
-    return `${minuteLabel} H${half} chance ${possessingTeamName} xG ${xg.toFixed(2)} no goal`;
-  }
-
-  if (possessionSwing) {
-    return `${minuteLabel} H${half} possession swing to ${possessingTeamName}`;
-  }
-
-  return `${minuteLabel} H${half} controlled phase by ${possessingTeamName}`;
-};
 
 const getWinner = (score) => {
   if (score[TEAM_KEY.A] > score[TEAM_KEY.B]) return TEAM_KEY.A;
@@ -242,8 +228,8 @@ export const runNextChunk = (currentState, context) => {
   if (currentState.status !== "running") return currentState;
 
   const nextChunkNumber = currentState.chunk + 1;
-  const minute = getMinuteFromChunk(nextChunkNumber, context.chunkCount);
-  const half = getHalfFromMinute(minute);
+  const { minuteStart, minuteEnd } = getChunkMinuteBounds(nextChunkNumber);
+  const half = getHalfForMinute(minuteStart);
   const teamA = context.teams[TEAM_KEY.A];
   const teamB = context.teams[TEAM_KEY.B];
 
@@ -334,54 +320,42 @@ export const runNextChunk = (currentState, context) => {
 
   const possessionSwing =
     currentState.lastPossession != null && currentState.lastPossession !== possessingTeamKey;
-  const goalsTimeline =
-    goalScored && goalScorerId
-      ? [
-          ...currentState.goalsTimeline,
-          {
-            id: `goal-${nextChunkNumber}-${score[TEAM_KEY.A]}-${score[TEAM_KEY.B]}`,
-            minute,
-            half,
-            teamKey: possessingTeamKey,
-            teamName: possessingTeam.teamName,
-            scorerId: goalScorerId,
-            scorerName: goalScorerName,
-            scoreA: score[TEAM_KEY.A],
-            scoreB: score[TEAM_KEY.B],
-          },
-        ]
-      : currentState.goalsTimeline;
-
-  const nextLog = [
-    ...currentState.log,
-    {
-      id: `chunk-${nextChunkNumber}`,
-      chunk: nextChunkNumber,
-      possessionTeam: possessingTeamKey,
-      possessionSwing,
-      chanceCreated,
-      xg,
-      goalScored,
-      goalScorerId,
-      goalScorerName,
-      minute,
-      half,
-      scoreA: score[TEAM_KEY.A],
-      scoreB: score[TEAM_KEY.B],
-      message: buildChunkMessage({
-        possessingTeamName: possessingTeam.teamName,
-        possessionSwing,
-        chanceCreated,
-        xg,
-        goalScored,
-        goalScorerName,
-        minute,
-        half,
-        scoreA: score[TEAM_KEY.A],
-        scoreB: score[TEAM_KEY.B],
-      }),
+  const chunkEvents = generateChunkEvents({
+    context,
+    chunkIndex: nextChunkNumber,
+    half,
+    minuteStart,
+    minuteEnd,
+    possessionTeamId: possessingTeamKey,
+    defendingTeamId: defendingTeamKey,
+    possessionSwing,
+    chanceCreated,
+    xg,
+    goalScored,
+    goalScorerId,
+    scoreAfter: {
+      a: score[TEAM_KEY.A],
+      b: score[TEAM_KEY.B],
     },
-  ];
+  });
+  const goalEvent = chunkEvents.find((event) => event.kind === EVENT_KIND.GOAL) || null;
+
+  const goalsTimeline = goalEvent
+    ? [
+        ...currentState.goalsTimeline,
+        {
+          id: `goal-${goalEvent.id}`,
+          minute: goalEvent.minute,
+          half: goalEvent.half,
+          teamKey: goalEvent.teamId,
+          teamName: context.setup[goalEvent.teamId].name,
+          scorerId: goalEvent.primaryPlayerId,
+          scorerName: context.playersById[goalEvent.primaryPlayerId]?.name || goalScorerName || "Unknown",
+          scoreA: score[TEAM_KEY.A],
+          scoreB: score[TEAM_KEY.B],
+        },
+      ]
+    : currentState.goalsTimeline;
 
   const finished = nextChunkNumber >= context.chunkCount;
 
@@ -391,9 +365,12 @@ export const runNextChunk = (currentState, context) => {
     chunk: nextChunkNumber,
     score,
     stats,
-    log: nextLog,
+    log: [...currentState.log, ...chunkEvents],
+    latestChunkEvents: chunkEvents,
     goalsTimeline,
     winner: finished ? getWinner(score) : null,
+    pauseForGoal: !!goalEvent,
+    lastGoalEvent: goalEvent || currentState.lastGoalEvent,
     lastPossession: possessingTeamKey,
   };
 };

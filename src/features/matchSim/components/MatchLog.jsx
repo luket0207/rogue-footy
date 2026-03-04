@@ -27,11 +27,13 @@ const MatchLog = ({ matchState }) => {
             <div className="matchSim__logItem" key={item.id}>
               <div className="matchSim__logTop">
                 <span>
-                  {item.minute}' H{item.half} (Chunk {item.chunk})
+                  {item.minute}' {item.half} (Chunk {item.chunkIndex})
                 </span>
-                <span>{item.possessionTeam === TEAM_KEY.A ? teamAName : teamBName}</span>
+                <span>{item.teamId === TEAM_KEY.A ? teamAName : teamBName}</span>
               </div>
-              <div>{item.message}</div>
+              <div>
+                {item.minute}' {item.half}: {item.text}
+              </div>
             </div>
           ))
         )}

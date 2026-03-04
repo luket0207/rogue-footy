@@ -18,16 +18,19 @@ const CurrentEventBanner = ({ matchState, isPlaying }) => {
   let title = "Current Event";
   let text = "Kick off to begin.";
 
-  if (matchState.phase === "half_time") {
+  if (matchState.currentEvent) {
+    const event = matchState.currentEvent;
+    title = `Minute ${event.minute}' - ${event.half} - Chunk ${event.chunkIndex}`;
+    text = event.text;
+  } else if (matchState.phase === "half_time") {
     title = "Half Time";
     text = `30' Half time. ${teamAName} ${matchState.score[TEAM_KEY.A]} - ${matchState.score[TEAM_KEY.B]} ${teamBName}`;
+  } else if (matchState.phase === "goal_pause") {
+    title = "Goal";
+    text = "Restart from kick off when ready.";
   } else if (matchState.phase === "finished") {
     title = "Full Time";
     text = `60' Full time. ${teamAName} ${matchState.score[TEAM_KEY.A]} - ${matchState.score[TEAM_KEY.B]} ${teamBName}`;
-  } else if (matchState.currentEvent) {
-    const event = matchState.currentEvent;
-    title = `Minute ${event.minute}' - Chunk ${event.chunk}`;
-    text = event.message;
   } else if (isPlaying) {
     text = "Play is live.";
   }

@@ -1,6 +1,6 @@
 /* eslint-disable react/prop-types */
 
-import { TEAM_KEY } from "../utils/matchSimTypes";
+import { EVENT_KIND, TEAM_KEY } from "../utils/matchSimTypes";
 
 const formatPossession = (chunksOwned, totalChunks) => {
   if (totalChunks <= 0) return "0.0%";
@@ -29,7 +29,18 @@ const Scoreboard = ({ matchState }) => {
   const teamAScorers = buildScorerRows(goalsTimeline, TEAM_KEY.A);
   const teamBScorers = buildScorerRows(goalsTimeline, TEAM_KEY.B);
   const keyEvents = [...matchState.log]
-    .filter((item) => item.goalScored || item.xg >= 0.55 || item.possessionSwing)
+    .filter(
+      (item) =>
+        item.kind === EVENT_KIND.GOAL ||
+        item.kind === EVENT_KIND.SHOT ||
+        item.kind === EVENT_KIND.SHOT_SAVED ||
+        item.kind === EVENT_KIND.SHOT_BLOCKED ||
+        item.kind === EVENT_KIND.SHOT_WIDE ||
+        item.kind === EVENT_KIND.CORNER_WON ||
+        item.kind === EVENT_KIND.FREE_KICK ||
+        item.kind === EVENT_KIND.COUNTER_START ||
+        item.kind === EVENT_KIND.POSSESSION_SWING
+    )
     .slice(-8)
     .reverse();
 
@@ -108,7 +119,7 @@ const Scoreboard = ({ matchState }) => {
         ) : (
           keyEvents.map((event) => (
             <div key={event.id} className="matchSim__keyEventRow">
-              {event.minute}' {event.message}
+              {event.minute}' {event.half}: {event.text}
             </div>
           ))
         )}

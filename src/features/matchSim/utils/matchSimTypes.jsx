@@ -53,4 +53,42 @@ export const TEAM_KEY = Object.freeze({
 });
 
 export const DEFAULT_CHUNK_COUNT = 30;
+export const CHUNK_MINUTES = 2;
+export const MATCH_TOTAL_MINUTES = 60;
+
+export const MATCH_HALF = Object.freeze({
+  H1: "H1",
+  H2: "H2",
+});
+
+export const EVENT_KIND = Object.freeze({
+  POSSESSION_SWING: "POSSESSION_SWING",
+  CONTROLLED_PHASE: "CONTROLLED_PHASE",
+  BAD_TOUCH: "BAD_TOUCH",
+  TURNOVER: "TURNOVER",
+  INTERCEPTION: "INTERCEPTION",
+  TACKLE_WON: "TACKLE_WON",
+  FOUL_WON: "FOUL_WON",
+  FREE_KICK: "FREE_KICK",
+  CORNER_WON: "CORNER_WON",
+  CORNER_TAKEN: "CORNER_TAKEN",
+  THROW_IN: "THROW_IN",
+  BUILD_UP: "BUILD_UP",
+  COUNTER_START: "COUNTER_START",
+  SHOT: "SHOT",
+  SHOT_BLOCKED: "SHOT_BLOCKED",
+  SHOT_SAVED: "SHOT_SAVED",
+  SHOT_WIDE: "SHOT_WIDE",
+  GOAL: "GOAL",
+  KICK_OFF: "KICK_OFF",
+});
+
+export const EVENT_OUTCOME = Object.freeze({
+  SUCCESS: "success",
+  FAIL: "fail",
+  GOAL: "goal",
+  SAVED: "saved",
+  BLOCKED: "blocked",
+  WIDE: "wide",
+});
 

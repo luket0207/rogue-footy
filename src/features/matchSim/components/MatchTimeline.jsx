@@ -27,7 +27,7 @@ const MatchTimeline = ({ matchState }) => {
           {goals.map((goal) => (
             <div className="matchSim__timelineItem" key={goal.id}>
               <div className="matchSim__timelineMinute">
-                {goal.minute}' H{goal.half}
+                {goal.minute}' {goal.half}
               </div>
               <div className="matchSim__timelineDetails">
                 <div>
