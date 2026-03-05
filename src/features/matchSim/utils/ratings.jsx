@@ -215,10 +215,28 @@ const aggregateRoleAttributes = (playerIds, role, playersById, slotCount) => {
   };
 };
 
-const getWeightedOffBall = (roleAverages, formationKey) => {
-  const counts = FORMATIONS[formationKey];
+const getFormationCounts = (formationKey, lineup) => {
+  if (FORMATIONS[formationKey]) return FORMATIONS[formationKey];
+  return {
+    [POSITION.DEF]: Math.max(
+      0,
+      Array.isArray(lineup?.[POSITION.DEF]) ? lineup[POSITION.DEF].length : 0
+    ),
+    [POSITION.MID]: Math.max(
+      0,
+      Array.isArray(lineup?.[POSITION.MID]) ? lineup[POSITION.MID].length : 0
+    ),
+    [POSITION.FWR]: Math.max(
+      0,
+      Array.isArray(lineup?.[POSITION.FWR]) ? lineup[POSITION.FWR].length : 0
+    ),
+  };
+};
+
+const getWeightedOffBall = (roleAverages, counts) => {
   const totalSlots =
     counts[POSITION.DEF] + counts[POSITION.MID] + counts[POSITION.FWR];
+  if (totalSlots <= 0) return 0;
 
   const weighted =
     roleAverages[POSITION.DEF].offBall * counts[POSITION.DEF] +
@@ -243,7 +261,7 @@ export const getRoleSelectionScore = (player, role) => {
 
 export const computeTeamProfile = (teamConfig, playersById) => {
   const { formation, lineup } = teamConfig;
-  const counts = FORMATIONS[formation];
+  const counts = getFormationCounts(formation, lineup);
 
   const roleAverages = {
     [POSITION.DEF]: aggregateRoleAttributes(
@@ -303,7 +321,7 @@ export const computeTeamProfile = (teamConfig, playersById) => {
     resistance: clamp(resistanceBreakdown.defDefending + resistanceBreakdown.midDefending + resistanceBreakdown.gkGoalkeeping, 10, 98),
   };
 
-  const teamOffBall = getWeightedOffBall(roleAverages, formation);
+  const teamOffBall = getWeightedOffBall(roleAverages, counts);
   const coherence = clamp01(
     (roleAverages[POSITION.MID].workRate + roleAverages[POSITION.MID].control + teamOffBall) / 300
   );

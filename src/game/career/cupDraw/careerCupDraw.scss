@@ -1,0 +1,92 @@
+@use "../../../assets/scss/ui/import" as *;
+
+.careerCupDraw {
+  min-height: 100vh;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.careerCupDraw__panel {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 1rem;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+
+  h1 {
+    margin: 0 0 0.4rem;
+    color: $darkText;
+  }
+
+  p {
+    margin: 0;
+    color: #334155;
+  }
+
+  p + p {
+    margin-top: 0.2rem;
+  }
+}
+
+.careerCupDraw__actions {
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.careerCupDraw__drawQueue {
+  margin-top: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.7rem;
+
+  h2 {
+    margin: 0 0 0.45rem;
+    font-size: 0.98rem;
+    color: #0f172a;
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 1.15rem;
+    display: grid;
+    gap: 0.3rem;
+    color: #1f2937;
+  }
+
+  li.is-active {
+    font-weight: 800;
+    color: #1d4ed8;
+  }
+}
+
+.careerCupDraw__fixtures {
+  margin-top: 0.9rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.7rem;
+
+  h2 {
+    margin: 0 0 0.45rem;
+    font-size: 0.98rem;
+    color: #0f172a;
+  }
+
+  p {
+    color: #475569;
+  }
+
+  ol {
+    margin: 0;
+    padding-left: 1.15rem;
+    display: grid;
+    gap: 0.3rem;
+    color: #1f2937;
+  }
+}

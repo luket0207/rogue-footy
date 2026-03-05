@@ -123,9 +123,20 @@ const buildScorerWeights = (teamProfile, playersById) => {
   }, {});
 };
 
-export const createMatchContext = ({ seed, chunkCount = DEFAULT_CHUNK_COUNT, players, teamA, teamB }) => {
+export const createMatchContext = ({
+  seed,
+  chunkCount = DEFAULT_CHUNK_COUNT,
+  players,
+  teamA,
+  teamB,
+  meta,
+}) => {
   const playersById = playersArrayToMap(players);
-  const teamColors = createMatchTeamColors(seed);
+  const teamColors = createMatchTeamColors({
+    seed,
+    teamAColor: meta?.teamAColor,
+    teamBColor: meta?.teamBColor,
+  });
 
   const baseA = computeTeamProfile(teamA, playersById);
   const baseB = computeTeamProfile(teamB, playersById);

@@ -1,0 +1,35 @@
+@use "../../../assets/scss/ui/import" as *;
+
+.careerStaff {
+  min-height: 100vh;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.careerStaff__panel {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 1.2rem;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+
+  h1 {
+    margin: 0 0 0.4rem;
+    color: $darkText;
+  }
+
+  p {
+    margin: 0;
+    color: #334155;
+  }
+}
+
+.careerStaff__actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}

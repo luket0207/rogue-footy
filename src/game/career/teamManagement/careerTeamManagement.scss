@@ -1,0 +1,259 @@
+@use "../../../assets/scss/ui/import" as *;
+@use "../../../assets/scss/colours" as colors;
+
+.careerTeamManagement {
+  min-height: 100vh;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.careerTeamManagement__panel {
+  width: 100%;
+  margin: 0;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 1rem;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+
+  h1,
+  h2 {
+    margin: 0 0 0.6rem;
+    color: $darkText;
+  }
+
+  p {
+    margin: 0 0 0.4rem;
+    color: #334155;
+  }
+}
+
+.careerTeamManagement__controls {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  align-items: end;
+
+  select {
+    min-width: 160px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    padding: 0.4rem 0.55rem;
+    background: #ffffff;
+  }
+}
+
+.careerTeamManagement__controlField {
+  display: grid;
+  gap: 0.25rem;
+
+  label {
+    font-weight: 700;
+    color: #0f172a;
+  }
+}
+
+.careerTeamManagement__layout {
+  margin-top: 1rem;
+  display: grid;
+  grid-template-columns: minmax(340px, 420px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.careerTeamManagement__lineup,
+.careerTeamManagement__squad {
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  background: #f8fbff;
+  padding: 0.8rem;
+}
+
+.careerTeamManagement__pitch {
+  position: relative;
+  margin-top: 0.4rem;
+  border-radius: 12px;
+  border: 2px solid #166534;
+  background:
+    radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0, rgba(255, 255, 255, 0.12) 9%, transparent 9.5%),
+    linear-gradient(180deg, #16a34a 0%, #15803d 100%);
+  padding: 0.8rem 0.7rem;
+  display: grid;
+  gap: 0.65rem;
+  overflow: hidden;
+}
+
+.careerTeamManagement__pitch::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 2px solid rgba(255, 255, 255, 0.45);
+}
+
+.careerTeamManagement__pitchRow {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.careerTeamManagement__pitchRow--gk {
+  margin-top: 0.15rem;
+}
+
+.careerTeamManagement__pitchSlot {
+  width: min(100%, 172px);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(15, 23, 42, 0.22);
+  padding: 0.38rem 0.42rem;
+  display: grid;
+  gap: 0.26rem;
+  min-width: 0;
+
+  label {
+    font-size: 0.75rem;
+    color: #f8fafc;
+    font-weight: 800;
+    letter-spacing: 0.01em;
+  }
+
+  select {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #bbf7d0;
+    border-radius: 8px;
+    padding: 0.34rem 0.45rem;
+    background: #ffffff;
+    color: #0f172a;
+    font-size: 0.8rem;
+  }
+}
+
+.careerTeamManagement__status {
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.careerTeamManagement__status.is-valid {
+  color: #0f7a2e;
+}
+
+.careerTeamManagement__status.is-invalid {
+  color: #9f1239;
+}
+
+.careerTeamManagement__saved {
+  margin-top: 0.4rem;
+  font-size: 0.82rem;
+  color: #334155;
+}
+
+.careerTeamManagement__squadWrap {
+  overflow: auto;
+  max-width: 100%;
+  border: 1px solid #dbe4ee;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.careerTeamManagement__squad table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 700px;
+
+  th,
+  td {
+    border-bottom: 1px solid #e2e8f0;
+    padding: 0.4rem 0.5rem;
+    text-align: left;
+    font-size: 0.82rem;
+    white-space: nowrap;
+  }
+
+  thead th {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    z-index: 1;
+    color: #0f172a;
+  }
+}
+
+.careerTeamManagement__squad tbody td {
+  color: #0f172a;
+}
+
+.careerTeamManagement__nameCell,
+.careerTeamManagement__posCell {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.careerTeamManagement__statCell {
+  text-align: center;
+}
+
+.careerTeamManagement__statPill {
+  display: inline-flex;
+  min-width: 2.1rem;
+  justify-content: center;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.08rem 0.45rem;
+  font-size: 0.76rem;
+  font-weight: 800;
+  line-height: 1.2;
+  border: 1px solid transparent;
+}
+
+.careerTeamManagement__statPill.is-elite {
+  background: colors.$ratingEliteBg;
+  color: colors.$ratingEliteText;
+  border-color: colors.$ratingEliteBorder;
+}
+
+.careerTeamManagement__statPill.is-legend {
+  background: colors.$ratingLegendBg;
+  color: colors.$ratingLegendText;
+  border-color: colors.$ratingLegendBorder;
+}
+
+.careerTeamManagement__statPill.is-strong {
+  background: colors.$ratingStrongBg;
+  color: colors.$ratingStrongText;
+  border-color: colors.$ratingStrongBorder;
+}
+
+.careerTeamManagement__statPill.is-ok {
+  background: colors.$ratingOkBg;
+  color: colors.$ratingOkText;
+  border-color: colors.$ratingOkBorder;
+}
+
+.careerTeamManagement__statPill.is-weak {
+  background: colors.$ratingWeakBg;
+  color: colors.$ratingWeakText;
+  border-color: colors.$ratingWeakBorder;
+}
+
+.careerTeamManagement__actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 980px) {
+  .careerTeamManagement__layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,7 +1,10 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Button, { BUTTON_VARIANT } from "../../../engine/ui/button/button";
 import { useGame } from "../../../engine/gameContext/gameContext";
 import { useMatchSim } from "../hooks/useMatchSim";
+import { TEAM_KEY } from "../utils/matchSimTypes";
+import { applyCareerMatchResultToGameState } from "../../../game/career/utils/careerMatchFlow";
 import CurrentEventBanner from "./currentEventBanner";
 import Scoreboard from "./scoreboard";
 import MatchLog from "./MatchLog";
@@ -17,10 +20,15 @@ const MATCH_SPEED_OPTIONS = Object.freeze([
 ]);
 
 const Match = () => {
-  const { gameState } = useGame();
+  const navigate = useNavigate();
+  const { gameState, setGameState, setGameValue } = useGame();
   const pendingConfig = gameState.match?.pendingConfig || null;
+  const autoKickOffToken = gameState.match?.autoKickOffToken || "";
+  const isCareerMatch = pendingConfig?.meta?.source === "career";
+  const hasCommittedCareerResultRef = useRef(false);
+  const consumedAutoKickOffTokenRef = useRef("");
 
-  const { matchState, isPlaying, goalOverlayEvent, playbackSpeed, initializeMatch, kickOff, resetMatch, setPlaybackSpeed } =
+  const { matchState, isPlaying, goalOverlayEvent, playbackSpeed, initializeMatch, kickOff, setPlaybackSpeed } =
     useMatchSim();
 
   useEffect(() => {
@@ -28,6 +36,48 @@ const Match = () => {
     if (matchState.status !== "idle") return;
     initializeMatch(pendingConfig);
   }, [initializeMatch, matchState.status, pendingConfig]);
+
+  useEffect(() => {
+    hasCommittedCareerResultRef.current = false;
+    consumedAutoKickOffTokenRef.current = "";
+  }, [pendingConfig?.meta?.fixtureId]);
+
+  useEffect(() => {
+    if (!autoKickOffToken) return;
+    if (consumedAutoKickOffTokenRef.current === autoKickOffToken) return;
+    if (matchState.status === "idle") return;
+    if (matchState.phase !== "pre_kickoff") return;
+
+    consumedAutoKickOffTokenRef.current = autoKickOffToken;
+    setGameValue("match.autoKickOffToken", "");
+    kickOff();
+  }, [
+    autoKickOffToken,
+    kickOff,
+    matchState.phase,
+    matchState.status,
+    setGameValue,
+  ]);
+
+  useEffect(() => {
+    if (!isCareerMatch) return;
+    if (matchState.phase !== "finished") return;
+    if (hasCommittedCareerResultRef.current) return;
+
+    hasCommittedCareerResultRef.current = true;
+    const scoreA = Number(matchState.score?.[TEAM_KEY.A]) || 0;
+    const scoreB = Number(matchState.score?.[TEAM_KEY.B]) || 0;
+
+    setGameState((previous) =>
+      applyCareerMatchResultToGameState({
+        previousState: previous,
+        pendingConfig,
+        scoreA,
+        scoreB,
+      })
+    );
+    navigate("/career/match-summary", { replace: true });
+  }, [isCareerMatch, matchState.phase, matchState.score, navigate, pendingConfig, setGameState]);
 
   const kickOffLabel = useMemo(() => {
     if (matchState.phase === "half_time") return "Kick Off Second Half";
@@ -41,10 +91,21 @@ const Match = () => {
       <div className="matchSim">
         <section className="matchSim__panel">
           <h2>No Match Config Found</h2>
-          <p>Start from team selection to create a debug match.</p>
-          <Button variant={BUTTON_VARIANT.PRIMARY} to="/team-selection">
-            Go to Team Selection
-          </Button>
+          {gameState?.mode === "career" ? (
+            <>
+              <p>No active career match was found.</p>
+              <Button variant={BUTTON_VARIANT.PRIMARY} to="/career/calendar">
+                Back to Calendar
+              </Button>
+            </>
+          ) : (
+            <>
+              <p>Start from team selection to create a debug match.</p>
+              <Button variant={BUTTON_VARIANT.PRIMARY} to="/team-selection">
+                Go to Team Selection
+              </Button>
+            </>
+          )}
         </section>
       </div>
     );
@@ -61,12 +122,11 @@ const Match = () => {
         </div>
 
         <div className="matchSim__headerActions">
-          <Button variant={BUTTON_VARIANT.TERTIARY} to="/team-selection">
-            Back to Team Selection
-          </Button>
-          <Button variant={BUTTON_VARIANT.SECONDARY} onClick={resetMatch}>
-            Restart Match
-          </Button>
+          {!isCareerMatch && (
+            <Button variant={BUTTON_VARIANT.TERTIARY} to="/team-selection">
+              Back to Team Selection
+            </Button>
+          )}
         </div>
       </header>
 

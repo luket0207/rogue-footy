@@ -2,6 +2,7 @@ import { TEAM_KEY } from "./matchSimTypes";
 import { createSeededRng } from "./seededRng";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const normalizeHex = (value) => String(value || "").trim().toLowerCase();
 
 const hslToRgb = (h, s, l) => {
   const sat = s / 100;
@@ -50,6 +51,32 @@ const toLuminanceChannel = (channel) => {
     : Math.pow((normalized + 0.055) / 1.055, 2.4);
 };
 
+const toHex = (value) => clamp(Math.round(value), 0, 255).toString(16).padStart(2, "0");
+
+const hexToRgb = (hexColor) => {
+  const hex = normalizeHex(hexColor).replace("#", "");
+  if (!(hex.length === 3 || hex.length === 6)) return null;
+  const fullHex =
+    hex.length === 3
+      ? `${hex[0]}${hex[0]}${hex[1]}${hex[1]}${hex[2]}${hex[2]}`
+      : hex;
+  const intValue = Number.parseInt(fullHex, 16);
+  if (!Number.isFinite(intValue)) return null;
+  return {
+    r: (intValue >> 16) & 255,
+    g: (intValue >> 8) & 255,
+    b: intValue & 255,
+  };
+};
+
+const rgbToHex = ({ r, g, b }) => `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+
+const mixRgb = (from, to, amount) => ({
+  r: from.r + (to.r - from.r) * amount,
+  g: from.g + (to.g - from.g) * amount,
+  b: from.b + (to.b - from.b) * amount,
+});
+
 const getRelativeLuminance = ({ r, g, b }) =>
   0.2126 * toLuminanceChannel(r) + 0.7152 * toLuminanceChannel(g) + 0.0722 * toLuminanceChannel(b);
 
@@ -81,14 +108,45 @@ const createPaletteFromHue = (baseHue, rng) => {
   };
 };
 
-export const createMatchTeamColors = (seed) => {
+const createPaletteFromBaseColor = (baseColorHex) => {
+  const baseRgb = hexToRgb(baseColorHex);
+  if (!baseRgb) return null;
+
+  const luminance = getRelativeLuminance(baseRgb);
+  const isDark = luminance < 0.52;
+  const mixTo = isDark
+    ? { r: 255, g: 255, b: 255 }
+    : { r: 15, g: 23, b: 42 };
+  const secondary = rgbToHex(mixRgb(baseRgb, mixTo, isDark ? 0.2 : 0.14));
+  const border = rgbToHex(mixRgb(baseRgb, mixTo, isDark ? 0.34 : 0.26));
+  const text = luminance > 0.56 ? "#0f172a" : "#ffffff";
+
+  return {
+    primary: baseColorHex,
+    secondary,
+    border,
+    text,
+  };
+};
+
+export const createMatchTeamColors = (seedOrConfig) => {
+  const options =
+    seedOrConfig && typeof seedOrConfig === "object"
+      ? seedOrConfig
+      : { seed: seedOrConfig };
+  const seed = options?.seed;
   const rng = createSeededRng(`${String(seed || "match-seed")}-team-colors`);
   const baseHueA = rng.randomInt(0, 359);
   const baseHueB = (baseHueA + rng.randomInt(125, 235)) % 360;
+  const fallbackA = createPaletteFromHue(baseHueA, rng);
+  const fallbackB = createPaletteFromHue(baseHueB, rng);
+
+  const explicitA = createPaletteFromBaseColor(options?.teamAColor);
+  const explicitB = createPaletteFromBaseColor(options?.teamBColor);
 
   return {
-    [TEAM_KEY.A]: createPaletteFromHue(baseHueA, rng),
-    [TEAM_KEY.B]: createPaletteFromHue(baseHueB, rng),
+    [TEAM_KEY.A]: explicitA || fallbackA,
+    [TEAM_KEY.B]: explicitB || fallbackB,
   };
 };
 
@@ -104,4 +162,3 @@ export const getTeamThemeStyle = (setup, teamId) => {
     "--match-team-text": colors.text,
   };
 };
-

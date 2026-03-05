@@ -6,6 +6,7 @@
  * - Encodes JSON to Base64
  * - Downloads Base64 as a .txt file
  * - Loads a .txt file, decodes Base64, parses JSON
+ * - Saves / loads Base64 from localStorage for autosave flows
  *
  * Usage:
  *
@@ -71,4 +72,30 @@ export const readTextFile = (file) => {
 export const loadGameFromTxtFile = async (file) => {
   const base64 = await readTextFile(file);
   return decodeGameStateFromBase64(base64);
+};
+
+export const SAVEGAME_STORAGE_KEY = "rogue_footy_savegame";
+
+const canUseStorage = () => typeof window !== "undefined" && !!window.localStorage;
+
+export const saveGameToLocalStorage = (
+  gameState,
+  { key = SAVEGAME_STORAGE_KEY } = {}
+) => {
+  if (!canUseStorage()) return "";
+  const base64 = encodeGameStateToBase64(gameState);
+  window.localStorage.setItem(key, base64);
+  return base64;
+};
+
+export const loadGameFromLocalStorage = ({ key = SAVEGAME_STORAGE_KEY } = {}) => {
+  if (!canUseStorage()) return null;
+  const base64 = window.localStorage.getItem(key);
+  if (!base64) return null;
+  return decodeGameStateFromBase64(base64);
+};
+
+export const clearGameFromLocalStorage = ({ key = SAVEGAME_STORAGE_KEY } = {}) => {
+  if (!canUseStorage()) return;
+  window.localStorage.removeItem(key);
 };

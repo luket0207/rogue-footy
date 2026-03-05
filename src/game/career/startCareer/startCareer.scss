@@ -1,0 +1,251 @@
+@use "../../../assets/scss/ui/import" as *;
+
+.careerStart {
+  min-height: 100vh;
+  padding: 1rem;
+  background: #f8fafc;
+}
+
+.careerStart__panel {
+  width: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 1.2rem;
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.08),
+    0 3px 8px rgba(0, 0, 0, 0.08);
+
+  h1 {
+    margin: 0 0 0.4rem;
+    color: $darkText;
+  }
+
+  p {
+    margin: 0;
+    color: #334155;
+  }
+}
+
+.careerStart__actions {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.careerStart__form {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.careerStart__stepMeta {
+  margin-top: 0.65rem;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.careerStart__control {
+  display: grid;
+  gap: 0.35rem;
+
+  label {
+    font-weight: 700;
+    color: #0f172a;
+  }
+
+  input,
+  select {
+    width: 100%;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 0.45rem 0.55rem;
+    background: #ffffff;
+  }
+
+  input[type="color"] {
+    width: 100%;
+    height: 40px;
+    padding: 0.2rem;
+    cursor: pointer;
+  }
+}
+
+.careerStart__colorGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+
+.careerStart__swatchRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+}
+
+.careerStart__colorActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.careerStart__swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 999px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.careerStart__swatchDot {
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.careerStart__validationList {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: #f8fafc;
+  padding: 0.5rem 0.65rem;
+  display: grid;
+  gap: 0.25rem;
+  font-size: 0.84rem;
+
+  .is-valid {
+    color: #166534;
+    font-weight: 600;
+  }
+
+  .is-invalid {
+    color: #991b1b;
+    font-weight: 600;
+  }
+}
+
+.careerStart__nextStep {
+  margin-top: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.8rem;
+
+  h2 {
+    margin: 0 0 0.45rem;
+    font-size: 1.05rem;
+    color: #0f172a;
+  }
+
+  p {
+    margin: 0.2rem 0;
+  }
+}
+
+.careerStart__draftPanel {
+  margin-top: 1rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0.85rem;
+
+  h2 {
+    margin: 0 0 0.55rem;
+    font-size: 1.05rem;
+    color: #0f172a;
+  }
+}
+
+.careerStart__selectedPlayer {
+  margin-top: 0.55rem;
+  font-size: 0.9rem;
+  color: #1f2937;
+}
+
+.careerStart__candidateMeta {
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.careerStart__candidateCard {
+  margin-top: 0.55rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  padding: 0.65rem 0.75rem;
+  background: #ffffff;
+}
+
+.careerStart__candidateName {
+  font-size: 1rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.careerStart__candidateStats {
+  margin-top: 0.25rem;
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  font-size: 0.86rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.careerStart__queueHint {
+  margin-top: 0.5rem;
+  font-size: 0.84rem;
+  color: #991b1b;
+  font-weight: 700;
+}
+
+.careerStart__candidateActions {
+  margin-top: 0.65rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.careerStart__muted {
+  font-size: 0.9rem;
+  color: #475569;
+}
+
+.careerStart__summaryList {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.careerStart__summaryRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.9rem;
+  color: #0f172a;
+
+  strong {
+    color: #0f172a;
+  }
+}
+
+@media (max-width: 740px) {
+  .careerStart__colorGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .careerStart__summaryRow {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

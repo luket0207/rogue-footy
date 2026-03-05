@@ -1,0 +1,200 @@
+CAREER MODE BUG INVESTIGATION LOG
+Updated: 2026-03-05
+
+Scope:
+- Investigation only.
+- No behavior changes applied in this pass.
+- Each entry includes probable causes and candidate fixes.
+
+Format:
+- Bug: User-observed issue.
+- Probable Causes: Most likely code-level reasons.
+- Potential Fixes: Suggested implementation options.
+
+
+BUG B001
+Bug:
+- All players in the initial career draft selection appear as OVR 74 or 80.
+
+Probable Causes:
+- In `src/game/career/startCareer/startCareer.jsx`, draft generation uses two hard bands:
+  - Typical: 68-74
+  - Rare: 75-80
+- `enforceOverallRange(...)` repeatedly nudges the primary skill until overall fits the band, which tends to push many players to the band ceiling (74 or 80) rather than a spread.
+- `targetOverall` is currently uniform, not bell-curved, so there is no center-weighting around ~72.
+
+Potential Fixes:
+- Replace uniform `targetOverall` with a bell-curve sampler centered around ~72 for typical players.
+- Change overall correction from "push primary skill until in band" to a smoother multi-attribute calibration so generated players settle around target values, not mostly max band edges.
+- Add a draft QA guard: if a generated batch has too many max-edge values, regenerate the batch.
+
+Fix:- Change overall correction from "push primary skill until in band" to a smoother multi-attribute calibration so generated players settle around target values, not mostly max band edges.
+
+
+
+BUG B002
+Bug:
+- "TYPICAL" word appears next to rating with unclear meaning.
+
+Probable Causes:
+- In `startCareer.jsx`, `candidateTier` is shown directly in UI without explanation text or legend.
+- Tier semantics are implicit in code (`TYPICAL` vs `RARE`) but not labeled in UX.
+
+Potential Fixes:
+- Add a one-line legend near candidate card:
+  - "Tier: Typical (standard roll) / Rare (higher potential roll)."
+- Or replace raw tier strings with user-facing labels and tooltips.
+- Optionally show `% rare chance` for current candidate queue step.
+
+Fix: Remove it
+
+
+BUG B003
+Bug:
+- Squad summary text in `careerStart__summaryRow` appears white; it should be black.
+
+Probable Causes:
+- In `src/game/career/startCareer/startCareer.scss`, `.careerStart__summaryRow` does not force text color for descendants.
+- Global/base typography styles may be overriding `strong` color to a light value.
+
+Potential Fixes:
+- Add explicit color rules in `.careerStart__summaryRow` for both normal text and `strong`:
+  - `color: #0f172a;`
+  - `strong { color: #0f172a; }`
+
+Fix: - Add explicit color rules in `.careerStart__summaryRow` for both normal text and `strong`:
+  - `color: #0f172a;`
+  - `strong { color: #0f172a; }`
+
+
+BUG B004
+Bug:
+- Calendar grid is split by weeks; desired view is month as a single 4x7 block.
+
+Probable Causes:
+- `src/game/career/calendar/careerCalendar.jsx` iterates `month.weeks` and renders each week separately.
+- `careerCalendar.scss` has dedicated `.careerCalendar__week` wrappers and labels.
+
+Potential Fixes:
+- Flatten month rendering to a single 28-cell month grid by mapping month days directly.
+- Keep week metadata in model for logic, but remove week containers from UI layer.
+
+Fix: - Keep week metadata in model for logic, but remove week containers from UI layer.
+
+
+BUG B005
+Bug:
+- Only one month should be visible at once, with a month toggle.
+
+Probable Causes:
+- Calendar currently renders all months at once via `seasonMonths.map(...)`.
+- No `activeMonthIndex` state or month navigation controls exist.
+
+Potential Fixes:
+- Add `activeMonthIndex` state in `CareerCalendar`.
+- Render only `seasonMonths[activeMonthIndex]`.
+- Add Prev/Next month controls and disable at boundaries.
+
+Fix: All of them
+
+
+BUG B006
+Bug:
+- No visible indicator of the current day in calendar.
+
+Probable Causes:
+- Day cells in `CareerCalendar` use only weekend style (`is-weekend`), no current-day class.
+- `currentDay` is computed but not used to style calendar cells.
+
+Potential Fixes:
+- Add `is-current-day` class when `day.dayNumber === season.currentDay`.
+- Add strong visual treatment (outline, badge, or fill).
+
+Fix: All of them
+
+
+BUG B007
+Bug:
+- No calendar markers for match days.
+
+Probable Causes:
+- Day cells are rendered from season model only; fixture/cup checks are not mapped onto cells.
+- There is no derived `fixturesByDay` / `eventsByDay` map used in calendar grid rendering.
+
+Potential Fixes:
+- Build a day-indexed map from league fixtures + cup rounds.
+- Add per-cell markers (league, cup, player match) and small labels/icons.
+- Highlight player match day differently from AI-only match days.
+
+Fix: All of them
+
+
+BUG B008
+Bug:
+- Day progression should show a modal ("moved to day X") with OK between days.
+
+Probable Causes:
+- `handleContinue` updates `season.currentDay` directly with no UX pause.
+- Modal system exists (`src/engine/ui/modal/modal.jsx`) but is not used in career calendar flow.
+
+Potential Fixes:
+- Use `useModal()` in `CareerCalendar`.
+- After day increment, open modal with day name/number and close via OK.
+- For match-trigger days, define order explicitly: day-advance modal before pre-match or after match summary, depending on desired flow.
+
+Fix: All of them
+
+BUG B009
+Bug:
+- Match starts immediately from day transition; desired flow is pre-match screen first, with Kick Off button and team/player lists.
+
+Probable Causes:
+- In `CareerCalendar.handleContinue`, if player fixture exists it directly sets `match.pendingConfig` and navigates to `/match`.
+- No `preMatch` component/route in career flow.
+
+Potential Fixes:
+- Add `/career/pre-match` route and component.
+- Store pending career fixture config in game state, navigate to pre-match first.
+- Pre-match screen displays team names, player lists, color icons, and a `Kick Off` button that then navigates to `/match`.
+
+Fix: All of them
+
+BUG B010
+Bug:
+- After match end, app sometimes returns to `/career/start` and appears to lose progress.
+
+Probable Causes:
+- Route guard race condition in `src/routes.jsx`:
+  - `/match` is treated as debug path unless an active career match exists.
+- In `applyCareerMatchResultToGameState(...)`, `pendingConfig` and `activeCareerMatch` are cleared immediately.
+- While still on `/match`, guard may detect no active career match and redirect to `/career/start` before/while navigation back to calendar completes.
+
+Potential Fixes:
+- Delay clearing `activeCareerMatch` until after leaving `/match` route.
+- Or update route guard to allow `/match` when `lastCareerMatchResult` is being committed/navigated.
+- Preferred long-term: match end -> `/career/match-summary` route -> then explicit return to `/career/calendar`.
+
+Fix: update route guard to allow `/match` when `lastCareerMatchResult` is being committed/navigated.
+- Preferred long-term: match end -> `/career/match-summary` route -> then explicit return to `/career/calendar`.
+
+BUG B011
+Bug:
+- Match sim balance suspicion: 83+ vs 78 draw occurred too early and feels too common.
+
+Probable Causes:
+- In `src/features/matchSim/utils/simulateMatch.jsx`, chance/xG bases are high and variance noise is also high.
+- Team-strength impact is softened by divisors and tactical/random volatility, so moderate rating gaps may not dominate enough.
+- Additional randomness from chunk-level possession and chance rolls can overwhelm a 4-6 overall gap in single-match samples.
+
+Potential Fixes:
+- Increase strength-to-outcome sensitivity (reduce divisors, raise weight of team profile deltas).
+- Slightly reduce xG/chance variance noise for closer-to-skill-consistent outcomes.
+- Add calibration harness (batch sims by rating gap) and tune draw/win distributions against target ranges.
+- Keep upset probability non-zero, but ensure expected win-rate slope is steeper as rating gap grows.
+
+Fix: Ignore this one for now
+
+
+Notes:
+- B010 and B009 are related and can be solved together by introducing a proper pre-match and post-match summary route flow.
+- B004-B008 are calendar UX-layer issues; core season model in `calendarModel.jsx` is usable and does not need a structural rewrite.
