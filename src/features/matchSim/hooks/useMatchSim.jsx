@@ -9,6 +9,7 @@ const EMPTY_MATCH_STATE = Object.freeze({
   phase: "idle",
   mode: null,
   seed: "",
+  currentMinute: 0,
   chunk: 0,
   chunkCount: 0,
   score: { A: 0, B: 0 },
@@ -50,11 +51,6 @@ const isValidPlaybackSpeed = (speed) => Object.prototype.hasOwnProperty.call(PLA
 const getGoalPauseMs = (speed) => (speed === PLAYBACK_SPEED.SLOW ? GOAL_PAUSE_SLOW_MS : GOAL_PAUSE_FAST_MS);
 const getEventVisibleMs = (event, baseSpeedMs, speed) =>
   event?.kind === EVENT_KIND.GOAL ? getGoalPauseMs(speed) : baseSpeedMs;
-const getSequenceVisibleMs = (events, speed) => {
-  const baseSpeedMs = PLAYBACK_SPEED_MS[speed];
-  if (!Array.isArray(events) || events.length === 0) return baseSpeedMs;
-  return events.reduce((sum, event) => sum + getEventVisibleMs(event, baseSpeedMs, speed), 0);
-};
 
 export const useMatchSim = () => {
   const [matchState, setMatchState] = useState(EMPTY_MATCH_STATE);
@@ -69,6 +65,7 @@ export const useMatchSim = () => {
   const bannerTimersRef = useRef([]);
   const goalOverlayTimerRef = useRef(null);
   const playbackSpeedRef = useRef(PLAYBACK_SPEED.NORMAL);
+  const pendingMinuteEventsRef = useRef([]);
 
   useEffect(() => {
     latestStateRef.current = matchState;
@@ -96,6 +93,7 @@ export const useMatchSim = () => {
       stopTimer();
       clearTimeoutList(bannerTimersRef);
       if (goalOverlayTimerRef.current) clearTimeout(goalOverlayTimerRef.current);
+      pendingMinuteEventsRef.current = [];
     };
   }, [clearTimeoutList, stopTimer]);
 
@@ -159,6 +157,7 @@ export const useMatchSim = () => {
         chunkCount: 30,
       });
       contextRef.current = context;
+      pendingMinuteEventsRef.current = [];
       kickoffTeamRef.current = context.rng.random() < 0.5 ? TEAM_KEY.A : TEAM_KEY.B;
       const initialState = createInitialMatchState(context, "interactive");
       latestStateRef.current = initialState;
@@ -173,7 +172,7 @@ export const useMatchSim = () => {
       const state = latestStateRef.current;
       if (!context || state.status === "idle") return;
 
-      const kickoffMinute = Math.min(MATCH_TOTAL_MINUTES, state.chunk * CHUNK_MINUTES + 1);
+      const kickoffMinute = Math.min(MATCH_TOTAL_MINUTES, state.currentMinute + 1);
       const kickoffEvent = createKickOffEvent({
         chunkIndex: state.chunk,
         minute: kickoffMinute,
@@ -202,12 +201,12 @@ export const useMatchSim = () => {
   );
 
   const startSegment = useCallback(
-    (targetChunk, livePhase) => {
+    (targetMinute, livePhase) => {
       const context = contextRef.current;
       const state = latestStateRef.current;
       if (!context) return;
 
-      const duration = targetChunk - state.chunk;
+      const duration = targetMinute - state.currentMinute;
       if (duration <= 0) return;
 
       stopTimer();
@@ -220,14 +219,45 @@ export const useMatchSim = () => {
 
       timerRef.current = createTimer({
         duration,
-        frequencyMs: getSequenceVisibleMs(state.latestChunkEvents, playbackSpeedRef.current),
+        frequencyMs: PLAYBACK_SPEED_MS[playbackSpeedRef.current],
         onTick: () => {
           const previousState = latestStateRef.current;
-          const steppedState = runNextChunk({ ...previousState, status: "running" }, context);
+          const nextMinute = Math.min(MATCH_TOTAL_MINUTES, previousState.currentMinute + 1);
+          const shouldResolveChunk =
+            nextMinute % CHUNK_MINUTES === 1 && previousState.chunk < context.chunkCount;
 
-          const atTargetChunk = steppedState.chunk >= targetChunk;
-          const atFullTime = steppedState.chunk >= context.chunkCount;
-          const goalEvent = steppedState.latestChunkEvents.find((event) => event.kind === EVENT_KIND.GOAL) || null;
+          const baseMinuteState = {
+            ...previousState,
+            status: "running",
+            phase: livePhase,
+            currentMinute: nextMinute,
+            latestChunkEvents: [],
+          };
+          const steppedState = shouldResolveChunk
+            ? runNextChunk(baseMinuteState, context)
+            : baseMinuteState;
+
+          const newChunkEvents = shouldResolveChunk ? steppedState.latestChunkEvents : [];
+          const queuedEvents = [...pendingMinuteEventsRef.current, ...newChunkEvents];
+          const dueMinuteEvents = queuedEvents.filter((event) => event.minute === nextMinute);
+          pendingMinuteEventsRef.current = queuedEvents.filter((event) => event.minute > nextMinute);
+
+          const dueGoalEvents = dueMinuteEvents.filter((event) => event.kind === EVENT_KIND.GOAL);
+          const dueGoalsTimeline = dueGoalEvents.map((goalEvent) => ({
+            id: `goal-${goalEvent.id}`,
+            minute: goalEvent.minute,
+            half: goalEvent.half,
+            teamKey: goalEvent.teamId,
+            teamName: context.setup[goalEvent.teamId].name,
+            scorerId: goalEvent.primaryPlayerId,
+            scorerName: context.playersById[goalEvent.primaryPlayerId]?.name || "Unknown",
+            scoreA: steppedState.score[TEAM_KEY.A],
+            scoreB: steppedState.score[TEAM_KEY.B],
+          }));
+
+          const atTargetMinute = nextMinute >= targetMinute;
+          const atFullTime = nextMinute >= MATCH_TOTAL_MINUTES || steppedState.chunk >= context.chunkCount;
+          const goalEvent = dueGoalEvents[dueGoalEvents.length - 1] || null;
 
           let nextPhase = livePhase;
           let nextStatus = "running";
@@ -235,33 +265,40 @@ export const useMatchSim = () => {
           if (atFullTime) {
             nextStatus = "finished";
             nextPhase = "finished";
-          } else if (atTargetChunk) {
+          } else if (atTargetMinute) {
             nextStatus = "paused";
-            nextPhase = targetChunk < context.chunkCount ? "half_time" : "finished";
-            if (targetChunk >= context.chunkCount) nextStatus = "finished";
+            nextPhase = targetMinute < MATCH_TOTAL_MINUTES ? "half_time" : "finished";
+            if (targetMinute >= MATCH_TOTAL_MINUTES) nextStatus = "finished";
           }
 
           const nextState = {
             ...steppedState,
             status: nextStatus,
             phase: nextPhase,
+            log: [...previousState.log, ...dueMinuteEvents],
+            goalsTimeline: [...previousState.goalsTimeline, ...dueGoalsTimeline],
+            latestChunkEvents: dueMinuteEvents,
+            winner: atFullTime ? steppedState.winner : null,
             pauseForGoal: false,
+            lastGoalEvent: goalEvent || previousState.lastGoalEvent,
           };
 
           latestStateRef.current = nextState;
           setMatchState(nextState);
-          showEventSequence(steppedState.latestChunkEvents);
+          if (dueMinuteEvents.length > 0) {
+            showEventSequence(dueMinuteEvents);
+          }
 
           if (goalEvent) {
             triggerGoalOverlay(goalEvent);
           }
 
-          const nextChunkDelay = getSequenceVisibleMs(steppedState.latestChunkEvents, playbackSpeedRef.current);
+          const nextChunkDelay = PLAYBACK_SPEED_MS[playbackSpeedRef.current];
           if (timerRef.current) {
             timerRef.current.setFrequencyMs(nextChunkDelay);
           }
 
-          if (atTargetChunk || atFullTime) {
+          if (atTargetMinute || atFullTime) {
             stopTimer();
           }
         },
@@ -283,25 +320,26 @@ export const useMatchSim = () => {
     if (!context) return;
     if (state.status === "running" || state.phase === "finished") return;
 
-    const halfChunk = Math.floor(context.chunkCount / 2);
-    let targetChunk = null;
+    const halfMinute = MATCH_TOTAL_MINUTES / 2;
+    let targetMinute = null;
 
     if (state.phase === "pre_kickoff" || state.phase === "ready") {
-      targetChunk = halfChunk;
+      targetMinute = halfMinute;
     } else if (state.phase === "half_time") {
-      targetChunk = context.chunkCount;
-    } else if (state.status === "paused" && state.chunk < context.chunkCount) {
-      targetChunk = state.chunk < halfChunk ? halfChunk : context.chunkCount;
+      targetMinute = MATCH_TOTAL_MINUTES;
+    } else if (state.status === "paused" && state.currentMinute < MATCH_TOTAL_MINUTES) {
+      targetMinute = state.currentMinute < halfMinute ? halfMinute : MATCH_TOTAL_MINUTES;
     }
 
-    if (targetChunk == null) return;
+    if (targetMinute == null) return;
 
     const kickoffTeam = kickoffTeamRef.current;
     appendKickOffEvent(kickoffTeam);
     kickoffTeamRef.current = getOpposingTeamId(kickoffTeam);
 
-    const livePhase = targetChunk <= halfChunk && state.chunk < halfChunk ? "first_half_live" : "second_half_live";
-    startSegment(targetChunk, livePhase);
+    const livePhase =
+      targetMinute <= halfMinute && state.currentMinute < halfMinute ? "first_half_live" : "second_half_live";
+    startSegment(targetMinute, livePhase);
   }, [appendKickOffEvent, startSegment]);
 
   const resetMatch = useCallback(() => {
@@ -320,6 +358,7 @@ export const useMatchSim = () => {
     }
 
     kickoffTeamRef.current = contextRef.current.rng.random() < 0.5 ? TEAM_KEY.A : TEAM_KEY.B;
+    pendingMinuteEventsRef.current = [];
     const initialState = createInitialMatchState(contextRef.current, "interactive");
     latestStateRef.current = initialState;
     setMatchState(initialState);
@@ -329,6 +368,7 @@ export const useMatchSim = () => {
     stopTimer();
     clearTimeoutList(bannerTimersRef);
     contextRef.current = null;
+    pendingMinuteEventsRef.current = [];
     if (goalOverlayTimerRef.current) {
       clearTimeout(goalOverlayTimerRef.current);
       goalOverlayTimerRef.current = null;

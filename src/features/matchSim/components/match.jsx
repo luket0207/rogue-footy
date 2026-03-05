@@ -82,7 +82,7 @@ const Match = () => {
             {kickOffLabel}
           </Button>
           <div className="matchSim__phaseText">
-            Phase: {matchState.phase === "pre_kickoff" ? "Ready" : matchState.phase}
+            Phase: {matchState.phase === "pre_kickoff" ? "Ready" : matchState.phase} | Minute: {matchState.currentMinute}'
           </div>
         </div>
 

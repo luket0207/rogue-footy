@@ -89,7 +89,19 @@ const LineupPicker = ({ teamId, lineup, formation, players, onSelectPlayer }) =>
 
   const renderSelect = (role, slotIndex, value) => {
     const options = sortedByRole[role];
+    const preferredOptions = options.filter((player) => player.preferredPos === role);
+    const otherOptions = options.filter((player) => player.preferredPos !== role);
     const selectedPlayer = playersById[value];
+
+    const renderPlayerOption = (player) => {
+      const disabled = value !== player.id && selectedIds.has(player.id);
+
+      return (
+        <option key={player.id} value={player.id} disabled={disabled}>
+          {formatPlayerLabel(player)}
+        </option>
+      );
+    };
 
     return (
       <div className="matchSim__control matchSim__control--lineup" key={`${role}-${slotIndex}`}>
@@ -103,15 +115,13 @@ const LineupPicker = ({ teamId, lineup, formation, players, onSelectPlayer }) =>
           onChange={(event) => onSelectPlayer(role, slotIndex, event.target.value)}
         >
           <option value="">Select player</option>
-          {options.map((player) => {
-            const disabled = value !== player.id && selectedIds.has(player.id);
-
-            return (
-              <option key={player.id} value={player.id} disabled={disabled}>
-                {formatPlayerLabel(player)}
-              </option>
-            );
-          })}
+          {preferredOptions.map(renderPlayerOption)}
+          {preferredOptions.length > 0 && otherOptions.length > 0 && (
+            <option value="" disabled>
+              ----------------------------
+            </option>
+          )}
+          {otherOptions.map(renderPlayerOption)}
         </select>
 
         {selectedPlayer && (

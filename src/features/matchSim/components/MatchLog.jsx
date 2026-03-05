@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import { TEAM_KEY } from "../utils/matchSimTypes";
+import { getTeamThemeStyle } from "../utils/teamColors";
 
 const MatchLog = ({ matchState }) => {
   if (matchState.status === "idle") {
@@ -24,12 +25,19 @@ const MatchLog = ({ matchState }) => {
           <div className="matchSim__muted">No events yet.</div>
         ) : (
           items.map((item) => (
-            <div className="matchSim__logItem" key={item.id}>
+            <div
+              className={`matchSim__logItem${item.teamId ? " matchSim__logItem--team" : ""}`}
+              key={item.id}
+              style={getTeamThemeStyle(matchState.setup, item.teamId) || undefined}
+            >
               <div className="matchSim__logTop">
                 <span>
                   {item.minute}' {item.half} (Chunk {item.chunkIndex})
                 </span>
-                <span>{item.teamId === TEAM_KEY.A ? teamAName : teamBName}</span>
+                <span className="matchSim__logTeamName">
+                  {item.teamId && <span className="matchSim__teamColorIcon" aria-hidden="true" />}
+                  {item.teamId === TEAM_KEY.A ? teamAName : item.teamId === TEAM_KEY.B ? teamBName : "Match"}
+                </span>
               </div>
               <div>
                 {item.minute}' {item.half}: {item.text}

@@ -43,6 +43,8 @@ const computeTeamReadiness = (teamProfile) => {
   return clamp(0.65 * quality + 0.35 * teamProfile.coherence, 0, 1);
 };
 
+const getPairKey = (defensive, attacking) => `${defensive}|${attacking}`;
+
 const computeExecutionFactors = (style, readiness, executionDemand, tacticPower) => {
   const edge = (tacticPower - 0.5) * 2;
   const edge01 = clamp(0.5 + 0.5 * edge, 0, 1);
@@ -218,17 +220,17 @@ const DEFENSIVE_TACTIC_CONFIG = Object.freeze({
     style: TACTIC_STYLE.CONSERVATIVE,
     executionDemand: 0.4,
     baseDelta: Object.freeze({
-      control: -0.08,
-      buildUp: -0.05,
-      resistance: 0.15,
+      control: -0.07,
+      buildUp: -0.04,
+      resistance: 0.11,
     }),
     masteryDelta: Object.freeze({
       resistance: 0.03,
     }),
     supportDelta: Object.freeze({
-      control: 0.03,
-      buildUp: 0.03,
-      resistance: 0.07,
+      control: 0.01,
+      buildUp: 0.01,
+      resistance: 0.03,
     }),
     failureDelta: Object.freeze({
       resistance: -0.02,
@@ -246,25 +248,82 @@ const DEFENSIVE_TACTIC_CONFIG = Object.freeze({
   },
 });
 
-const SYNERGY_MATRIX = Object.freeze({
-  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: Object.freeze({
-    threat: 0.08,
-    resistance: 0.04,
+// Quality spectrum matrix from design request:
+// score: GG=2, G=1, N=0, B=-1, BB=-2
+const PAIR_QUALITY_SCORE = Object.freeze({
+  good: Object.freeze({
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.DIRECT)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.COUNTER)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.DIRECT)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.COUNTER)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.DIRECT)]: -1,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.POSSESSION)]: 2,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.COUNTER)]: 2,
   }),
-  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: Object.freeze({
-    control: 0.08,
-    buildUp: 0.04,
-    resistance: -0.03,
+  mid: Object.freeze({
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.DIRECT)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.COUNTER)]: 2,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.DIRECT)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.COUNTER)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.DIRECT)]: -2,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.POSSESSION)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.COUNTER)]: 1,
   }),
-  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: Object.freeze({
-    buildUp: 0.03,
+  bad: Object.freeze({
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.DIRECT)]: 2,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.COUNTER)]: 2,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.DIRECT)]: 1,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.POSSESSION)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.COUNTER)]: 0,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.DIRECT)]: -2,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.POSSESSION)]: -2,
+    [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.COUNTER)]: -2,
   }),
-  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: Object.freeze({
-    control: -0.05,
+});
+
+// Positive profile is applied when pair score > 0.
+// Negative profile is applied when pair score < 0.
+const PAIR_EFFECT_PROFILE = Object.freeze({
+  [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.DIRECT)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.07, threat: 0.05, buildUp: 0.01 }),
+    negative: Object.freeze({ resistance: -0.04, threat: -0.03, buildUp: -0.02 }),
   }),
-  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: Object.freeze({
-    threat: 0.05,
-    resistance: -0.05,
+  [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.POSSESSION)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.03, control: 0.01, buildUp: -0.01 }),
+    negative: Object.freeze({ resistance: -0.02, control: -0.04, buildUp: -0.04 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.LOW_BLOCK, ATTACKING_TACTIC.COUNTER)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.07, threat: 0.09, buildUp: 0.01, control: -0.01 }),
+    negative: Object.freeze({ resistance: -0.04, threat: -0.06, buildUp: -0.03 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.DIRECT)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.04, buildUp: 0.03, threat: 0.03 }),
+    negative: Object.freeze({ resistance: -0.04, buildUp: -0.03, threat: -0.03 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.POSSESSION)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.05, control: 0.05, buildUp: 0.04, threat: 0.02 }),
+    negative: Object.freeze({ resistance: -0.04, control: -0.04, buildUp: -0.03, threat: -0.02 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.MID_BLOCK, ATTACKING_TACTIC.COUNTER)]: Object.freeze({
+    positive: Object.freeze({ resistance: 0.03, threat: 0.04 }),
+    negative: Object.freeze({ resistance: -0.03, threat: -0.04, control: -0.02 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.DIRECT)]: Object.freeze({
+    positive: Object.freeze({ control: 0.03, buildUp: 0.02, threat: 0.02, resistance: -0.03 }),
+    negative: Object.freeze({ control: -0.05, buildUp: -0.05, threat: -0.05, resistance: -0.09 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.POSSESSION)]: Object.freeze({
+    positive: Object.freeze({ control: 0.08, buildUp: 0.07, threat: 0.04, resistance: 0.04 }),
+    negative: Object.freeze({ control: -0.07, buildUp: -0.08, threat: -0.04, resistance: -0.07 }),
+  }),
+  [getPairKey(DEFENSIVE_TACTIC.HIGH_PRESS, ATTACKING_TACTIC.COUNTER)]: Object.freeze({
+    positive: Object.freeze({ control: 0.04, buildUp: 0.05, threat: 0.1, resistance: -0.04 }),
+    negative: Object.freeze({ control: -0.06, buildUp: -0.05, threat: -0.08, resistance: -0.08 }),
   }),
 });
 
@@ -272,76 +331,71 @@ const SYNERGY_MATRIX = Object.freeze({
 // - Attack tactic vs opponent defensive tactic
 // - Own defensive tactic vs opponent attack tactic
 // Values are normalized deltas and later scaled into metric points.
-const ATTACK_VS_DEFENSE_MATRIX = Object.freeze({
-  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: Object.freeze({
-    control: -0.05,
-    buildUp: -0.05,
+const MATCHUP_RESULT = Object.freeze({
+  GOOD: "G",
+  NEUTRAL: "N",
+  BAD: "B",
+});
+
+const ATTACK_MATCHUP_EFFECT = Object.freeze({
+  [MATCHUP_RESULT.GOOD]: Object.freeze({
+    control: 0.02,
+    buildUp: 0.04,
+    threat: 0.07,
   }),
-  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: Object.freeze({
-    control: 0.03,
-    buildUp: 0.02,
-  }),
-  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: Object.freeze({
-    control: 0.05,
-    buildUp: 0.03,
-    threat: -0.02,
-  }),
-  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: Object.freeze({
-    buildUp: 0.05,
-    threat: 0.03,
-  }),
-  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: Object.freeze({
-    threat: -0.01,
-  }),
-  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: Object.freeze({
-    buildUp: -0.03,
-    threat: -0.05,
-  }),
-  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: Object.freeze({
-    buildUp: 0.03,
-    threat: 0.08,
-  }),
-  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: Object.freeze({
-    threat: 0.01,
-  }),
-  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: Object.freeze({
-    buildUp: -0.03,
-    threat: -0.09,
+  [MATCHUP_RESULT.NEUTRAL]: Object.freeze({}),
+  [MATCHUP_RESULT.BAD]: Object.freeze({
+    control: -0.02,
+    buildUp: -0.04,
+    threat: -0.07,
   }),
 });
 
-const DEFENSE_VS_ATTACK_MATRIX = Object.freeze({
-  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.POSSESSION}`]: Object.freeze({
-    control: 0.05,
-    resistance: 0.03,
+const DEFENSE_MATCHUP_EFFECT = Object.freeze({
+  [MATCHUP_RESULT.GOOD]: Object.freeze({
+    control: 0.02,
+    resistance: 0.07,
   }),
-  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.DIRECT}`]: Object.freeze({
-    resistance: -0.04,
-  }),
-  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.COUNTER}`]: Object.freeze({
-    resistance: -0.08,
-    control: -0.03,
-  }),
-  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.POSSESSION}`]: Object.freeze({
-    resistance: 0.03,
-  }),
-  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.DIRECT}`]: Object.freeze({
-    resistance: 0.01,
-  }),
-  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.COUNTER}`]: Object.freeze({
-    resistance: -0.01,
-  }),
-  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.POSSESSION}`]: Object.freeze({
-    resistance: 0.04,
+  [MATCHUP_RESULT.NEUTRAL]: Object.freeze({}),
+  [MATCHUP_RESULT.BAD]: Object.freeze({
     control: -0.02,
+    resistance: -0.07,
   }),
-  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.DIRECT}`]: Object.freeze({
-    resistance: 0.05,
-  }),
-  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.COUNTER}`]: Object.freeze({
-    resistance: 0.08,
-    threat: -0.02,
-  }),
+});
+
+const ATTACK_VS_DEFENSE_MATRIX = Object.freeze({
+  // Derived attacker perspective from defensive matrix below:
+  // attacker gets inverse of defender effectiveness.
+  //            Direct  Possession  Counter
+  // Low Block     G        N          B
+  // Mid Block     B        G          N
+  // High Press    N        B          G
+  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.LOW_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
+  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
+  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.MID_BLOCK}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${ATTACKING_TACTIC.DIRECT}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${ATTACKING_TACTIC.POSSESSION}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
+  [`${ATTACKING_TACTIC.COUNTER}|${DEFENSIVE_TACTIC.HIGH_PRESS}`]: ATTACK_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+});
+
+const DEFENSE_VS_ATTACK_MATRIX = Object.freeze({
+  // Matrix requested by design (defender perspective):
+  //            Direct  Possession  Counter
+  // Low Block     B        N          G
+  // Mid Block     G        B          N
+  // High Press    N        G          B
+  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.DIRECT}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
+  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.POSSESSION}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${DEFENSIVE_TACTIC.LOW_BLOCK}|${ATTACKING_TACTIC.COUNTER}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.DIRECT}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.POSSESSION}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
+  [`${DEFENSIVE_TACTIC.MID_BLOCK}|${ATTACKING_TACTIC.COUNTER}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.DIRECT}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.NEUTRAL],
+  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.POSSESSION}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.GOOD],
+  [`${DEFENSIVE_TACTIC.HIGH_PRESS}|${ATTACKING_TACTIC.COUNTER}`]: DEFENSE_MATCHUP_EFFECT[MATCHUP_RESULT.BAD],
 });
 
 const computeTacticDelta = (config, team, opponent) => {
@@ -383,19 +437,99 @@ const computeTacticDelta = (config, team, opponent) => {
   };
 };
 
-const computeSynergyDelta = (attacking, defensive, coherence) => {
-  const key = `${attacking}|${defensive}`;
-  const base = SYNERGY_MATRIX[key];
-  if (!base) return createDeltaShape();
+const interpolate = (start, end, t) => start + (end - start) * t;
 
-  const scale = 0.5 + 0.5 * coherence;
-  const delta = createDeltaShape();
+const getQualityPairScore = (overallRating, pairKey) => {
+  const badScore = PAIR_QUALITY_SCORE.bad[pairKey] ?? 0;
+  const midScore = PAIR_QUALITY_SCORE.mid[pairKey] ?? 0;
+  const goodScore = PAIR_QUALITY_SCORE.good[pairKey] ?? 0;
 
-  Object.entries(base).forEach(([metric, value]) => {
-    delta[metric] = value * 100 * scale;
-  });
+  if (overallRating <= 80) return badScore;
+  if (overallRating >= 90) return goodScore;
 
-  return delta;
+  if (overallRating < 85) {
+    const t = (overallRating - 80) / 5;
+    return interpolate(badScore, midScore, t);
+  }
+
+  const t = (overallRating - 85) / 5;
+  return interpolate(midScore, goodScore, t);
+};
+
+const getAttackFit = (teamProfile, attacking) => {
+  const mid = getMid(teamProfile);
+  const fwr = getFwr(teamProfile);
+
+  if (attacking === ATTACKING_TACTIC.DIRECT) {
+    return clamp((0.5 * fwr.finishing + 0.3 * fwr.offBall + 0.2 * mid.passing) / 100, 0, 1);
+  }
+
+  if (attacking === ATTACKING_TACTIC.COUNTER) {
+    return clamp((0.42 * fwr.offBall + 0.34 * fwr.finishing + 0.24 * mid.control) / 100, 0, 1);
+  }
+
+  return clamp((0.4 * mid.passing + 0.35 * mid.control + 0.25 * mid.workRate) / 100, 0, 1);
+};
+
+const getDefenseFit = (teamProfile, defensive) => {
+  const mid = getMid(teamProfile);
+  const def = getDef(teamProfile);
+  const gk = getGk(teamProfile);
+
+  if (defensive === DEFENSIVE_TACTIC.LOW_BLOCK) {
+    return clamp((0.44 * def.defending + 0.32 * gk.goalkeeping + 0.24 * mid.workRate) / 100, 0, 1);
+  }
+
+  if (defensive === DEFENSIVE_TACTIC.HIGH_PRESS) {
+    return clamp((0.38 * mid.workRate + 0.32 * mid.offBall + 0.3 * mid.defending) / 100, 0, 1);
+  }
+
+  return clamp((0.46 * def.defending + 0.3 * mid.defending + 0.24 * mid.workRate) / 100, 0, 1);
+};
+
+const computeSynergyDelta = (teamProfile, attacking, defensive) => {
+  const pairKey = getPairKey(defensive, attacking);
+  const profile = PAIR_EFFECT_PROFILE[pairKey];
+  if (!profile) {
+    return {
+      pairKey,
+      qualityScore: 0,
+      attackFit: 0,
+      defenseFit: 0,
+      pairFit: 0,
+      scale: 0,
+      delta: createDeltaShape(),
+    };
+  }
+
+  const qualityScore = getQualityPairScore(teamProfile.overallRating, pairKey);
+  const attackFit = getAttackFit(teamProfile, attacking);
+  const defenseFit = getDefenseFit(teamProfile, defensive);
+  const pairFit = clamp(0.55 * attackFit + 0.45 * defenseFit, 0, 1);
+  const magnitude = clamp(Math.abs(qualityScore) / 2, 0, 1);
+
+  let baseShape = createDeltaShape();
+  let scale = 0;
+
+  if (qualityScore > 0) {
+    // Positive pair quality gains more from strong tactic-fit players.
+    scale = magnitude * (0.55 + 0.7 * pairFit);
+    baseShape = profile.positive;
+  } else if (qualityScore < 0) {
+    // Negative pair quality is punished harder when the squad lacks fit.
+    scale = magnitude * (0.6 + 0.8 * (1 - pairFit));
+    baseShape = profile.negative;
+  }
+
+  return {
+    pairKey,
+    qualityScore,
+    attackFit,
+    defenseFit,
+    pairFit,
+    scale,
+    delta: scaleDelta(baseShape, scale),
+  };
 };
 
 const computeMatchupDelta = (teamTactics, opponentTactics, readiness) => {
@@ -444,7 +578,8 @@ export const applyTeamTactics = (teamProfile, opponentProfile, tactics, opponent
 
   const attackOutcome = computeTacticDelta(attackConfig, teamProfile, opponentProfile);
   const defenseOutcome = computeTacticDelta(defenseConfig, teamProfile, opponentProfile);
-  const synergyDelta = computeSynergyDelta(attacking, defensive, teamProfile.coherence);
+  const synergyOutcome = computeSynergyDelta(teamProfile, attacking, defensive);
+  const synergyDelta = synergyOutcome.delta;
   const matchupOutcome = computeMatchupDelta(tactics, opponentTactics, computeTeamReadiness(teamProfile));
 
   const totalDelta = addDeltas(
@@ -469,6 +604,7 @@ export const applyTeamTactics = (teamProfile, opponentProfile, tactics, opponent
       attackOutcome,
       defenseOutcome,
       synergyDelta,
+      synergyOutcome,
       matchupOutcome,
       totalDelta,
     },

@@ -168,6 +168,7 @@ export const createInitialMatchState = (context, mode) => ({
   phase: "pre_kickoff",
   mode,
   seed: context.seed,
+  currentMinute: 0,
   chunk: 0,
   chunkCount: context.chunkCount,
   score: {

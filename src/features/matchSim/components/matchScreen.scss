@@ -428,12 +428,10 @@
 }
 
 .matchSim__teamColorIcon {
-  width: 0.72rem;
-  height: 0.72rem;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
   background: var(--match-team-primary);
-  border: 2px solid var(--match-team-secondary);
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
   flex: 0 0 auto;
 }
 
@@ -484,6 +482,16 @@
   word-break: break-word;
 }
 
+.matchSim__logItem--team {
+  border-left: 4px solid var(--match-team-border);
+  background: var(--match-team-primary);
+  color: var(--match-team-text);
+
+  .matchSim__teamColorIcon {
+    background: var(--match-team-secondary);
+  }
+}
+
 .matchSim__logTop {
   display: flex;
   justify-content: space-between;
@@ -494,6 +502,12 @@
   span {
     min-width: 0;
   }
+}
+
+.matchSim__logTeamName {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .matchSim__timelineWrap {
