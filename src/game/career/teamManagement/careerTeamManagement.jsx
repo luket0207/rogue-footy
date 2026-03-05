@@ -8,15 +8,11 @@ import {
   DEFENSIVE_TACTIC_OPTIONS,
   POSITION,
 } from "../../../features/matchSim/utils/matchSimTypes";
+import { createCoachAssessment } from "../utils/coachReadings";
 import {
-  autoFillCareerLineup,
-  CAREER_FORMATION_KEYS,
-  CAREER_FORMATIONS,
   createCareerLineupFromLegacySlots,
   DEFAULT_CAREER_FORMATION,
-  getCareerLineupPlayerIds,
   isCareerLineupComplete,
-  isValidCareerFormation,
   lineupToLegacySlots,
   normalizeCareerLineup,
 } from "../utils/teamSetup";
@@ -37,15 +33,15 @@ const ROLE_PRIORITY = Object.freeze({
   [POSITION.FWR]: 3,
 });
 
-const ROLE_DISPLAY_NAME = Object.freeze({
-  [POSITION.GK]: "Goalkeeper",
-  [POSITION.DEF]: "Defender",
-  [POSITION.MID]: "Midfielder",
-  [POSITION.FWR]: "Forward",
-});
 const DEFAULT_PLAYER_TACTICS = Object.freeze({
   attacking: ATTACKING_TACTIC.DIRECT,
   defensive: DEFENSIVE_TACTIC.MID_BLOCK,
+});
+const COACH_SKILL_OPTIONS = Object.freeze([1, 2, 3, 4, 5]);
+const DEFAULT_COACH_RATINGS = Object.freeze({
+  DEF: 5,
+  MID: 5,
+  FWR: 5,
 });
 
 const formatTacticLabel = (tactic) =>
@@ -83,12 +79,6 @@ const renderStatPill = (value) => {
   );
 };
 
-const formatFormation = (formation) => {
-  const counts = CAREER_FORMATIONS[formation];
-  if (!counts) return formation;
-  return `${counts[POSITION.DEF]}-${counts[POSITION.MID]}-${counts[POSITION.FWR]}`;
-};
-
 const getPlayerLabel = (player) =>
   `${player.name} (${POSITION_LABEL[player.preferredPos] || player.preferredPos}, OVR ${Number(player.overall) || 0})`;
 
@@ -115,11 +105,12 @@ const CareerTeamManagement = () => {
   const squad = Array.isArray(playerTeam?.squad) ? playerTeam.squad : [];
   const validIds = useMemo(() => new Set(squad.map((player) => player.id)), [squad]);
 
-  const [formation, setFormation] = useState(DEFAULT_CAREER_FORMATION);
+  const [formation] = useState(DEFAULT_CAREER_FORMATION);
   const [lineup, setLineup] = useState(() =>
     normalizeCareerLineup(null, DEFAULT_CAREER_FORMATION)
   );
   const [tactics, setTactics] = useState(DEFAULT_PLAYER_TACTICS);
+  const [coachRatings, setCoachRatings] = useState(DEFAULT_COACH_RATINGS);
   const [savedAt, setSavedAt] = useState("");
 
   useEffect(() => {
@@ -128,18 +119,13 @@ const CareerTeamManagement = () => {
 
   useEffect(() => {
     if (!playerTeam) return;
-    const nextFormation = isValidCareerFormation(playerTeam?.matchSetup?.formation)
-      ? playerTeam.matchSetup.formation
-      : isValidCareerFormation(playerTeam?.formation)
-        ? playerTeam.formation
-        : DEFAULT_CAREER_FORMATION;
+    const nextFormation = DEFAULT_CAREER_FORMATION;
 
     const baseLineup =
       playerTeam?.matchSetup?.lineup && typeof playerTeam.matchSetup.lineup === "object"
         ? normalizeCareerLineup(playerTeam.matchSetup.lineup, nextFormation)
         : createCareerLineupFromLegacySlots(playerTeam?.lineup, nextFormation);
     const normalized = sanitizeLineup(baseLineup, nextFormation, validIds);
-    const fallback = autoFillCareerLineup(squad, nextFormation);
     const complete = isCareerLineupComplete(normalized, nextFormation, validIds);
     const nextTactics = normalizeTactics(
       playerTeam?.matchSetup?.tactics && typeof playerTeam.matchSetup.tactics === "object"
@@ -147,8 +133,7 @@ const CareerTeamManagement = () => {
         : playerTeam?.tactics
     );
 
-    setFormation(nextFormation);
-    setLineup(complete ? normalized : fallback);
+    setLineup(complete ? normalized : createCareerLineupFromLegacySlots(playerTeam?.lineup, nextFormation));
     setTactics(nextTactics);
     setSavedAt("");
   }, [playerTeam, squad, validIds]);
@@ -177,59 +162,57 @@ const CareerTeamManagement = () => {
     [squad]
   );
 
-  const assignedIds = useMemo(() => new Set(getCareerLineupPlayerIds(lineup)), [lineup]);
   const isComplete = isCareerLineupComplete(lineup, formation, validIds);
   const hasNoTeam = !playerTeam || squad.length === 0;
-
-  const getPlayersSortedForRole = (role) =>
-    [...sortedSquad].sort((playerA, playerB) => {
-      const aPreferred = playerA.preferredPos === role ? 0 : 1;
-      const bPreferred = playerB.preferredPos === role ? 0 : 1;
-      if (aPreferred !== bPreferred) return aPreferred - bPreferred;
-      return (Number(playerB.overall) || 0) - (Number(playerA.overall) || 0);
-    });
-
-  const getUsedByOthers = (currentId) => {
-    const next = new Set(assignedIds);
-    if (currentId) next.delete(currentId);
-    return next;
-  };
-
-  const updateSlot = (role, index, playerId) => {
-    if (role === POSITION.GK) {
-      setLineup((previous) => ({
-        ...previous,
-        gkId: playerId,
-      }));
-      return;
-    }
-
-    setLineup((previous) => {
-      const nextRole = [...previous[role]];
-      nextRole[index] = playerId;
-      return {
-        ...previous,
-        [role]: nextRole,
-      };
-    });
-  };
-
-  const handleFormationChange = (nextFormation) => {
-    if (!isValidCareerFormation(nextFormation)) return;
-    setFormation(nextFormation);
-    setLineup((previous) => normalizeCareerLineup(previous, nextFormation));
-    setSavedAt("");
-  };
-
-  const handleAutoFill = () => {
-    setLineup(autoFillCareerLineup(squad, formation));
-    setSavedAt("");
-  };
 
   const handleTacticChange = (type, value) => {
     setTactics((previous) => normalizeTactics({ ...previous, [type]: value }));
     setSavedAt("");
   };
+
+  const handleCoachRatingChange = (roleKey, value) => {
+    const nextValue = Math.min(5, Math.max(1, Number(value) || 1));
+    setCoachRatings((previous) => ({
+      ...previous,
+      [roleKey]: nextValue,
+    }));
+  };
+
+  const lineupSlots = useMemo(() => {
+    const buildSlot = (role, index, label) => {
+      const playerId = role === POSITION.GK ? lineup.gkId : lineup[role][index] || "";
+      const player = playersById[playerId] || null;
+      const coach = player
+        ? createCoachAssessment({
+            player,
+            assignedRole: role,
+            tactics,
+            coachRatings,
+          })
+        : null;
+
+      return {
+        key: `${role}-${index}`,
+        role,
+        label,
+        player,
+        coach,
+      };
+    };
+
+    return {
+      [POSITION.FWR]: [buildSlot(POSITION.FWR, 0, "Forward")],
+      [POSITION.MID]: [
+        buildSlot(POSITION.MID, 0, "Midfielder 1"),
+        buildSlot(POSITION.MID, 1, "Midfielder 2"),
+      ],
+      [POSITION.DEF]: [
+        buildSlot(POSITION.DEF, 0, "Defender 1"),
+        buildSlot(POSITION.DEF, 1, "Defender 2"),
+      ],
+      [POSITION.GK]: [buildSlot(POSITION.GK, 0, "Goalkeeper")],
+    };
+  }, [coachRatings, lineup, playersById, tactics]);
 
   const handleSave = () => {
     if (!playerTeam || !isComplete) return;
@@ -287,24 +270,9 @@ const CareerTeamManagement = () => {
         <p>
           Team: <strong>{playerTeam.name}</strong>
         </p>
-        <p>Set formation and assign positions for career matches.</p>
+        <p>Set tactics and review coach feedback for fixed lineup positions.</p>
 
         <section className="careerTeamManagement__controls">
-          <div className="careerTeamManagement__controlField">
-            <label htmlFor="career-formation">Formation</label>
-            <select
-              id="career-formation"
-              value={formation}
-              onChange={(event) => handleFormationChange(event.target.value)}
-            >
-              {CAREER_FORMATION_KEYS.map((key) => (
-                <option key={key} value={key}>
-                  {formatFormation(key)}
-                </option>
-              ))}
-            </select>
-          </div>
-
           <div className="careerTeamManagement__controlField">
             <label htmlFor="career-attacking-tactic">Attacking Tactic</label>
             <select
@@ -335,9 +303,50 @@ const CareerTeamManagement = () => {
             </select>
           </div>
 
-          <Button variant={BUTTON_VARIANT.SECONDARY} onClick={handleAutoFill}>
-            Auto Fill
-          </Button>
+          <div className="careerTeamManagement__controlField">
+            <label htmlFor="career-coach-def">Coach DEF (Debug)</label>
+            <select
+              id="career-coach-def"
+              value={coachRatings.DEF}
+              onChange={(event) => handleCoachRatingChange("DEF", event.target.value)}
+            >
+              {COACH_SKILL_OPTIONS.map((level) => (
+                <option key={`def-${level}`} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="careerTeamManagement__controlField">
+            <label htmlFor="career-coach-mid">Coach MID (Debug)</label>
+            <select
+              id="career-coach-mid"
+              value={coachRatings.MID}
+              onChange={(event) => handleCoachRatingChange("MID", event.target.value)}
+            >
+              {COACH_SKILL_OPTIONS.map((level) => (
+                <option key={`mid-${level}`} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="careerTeamManagement__controlField">
+            <label htmlFor="career-coach-fwr">Coach FWR (Debug)</label>
+            <select
+              id="career-coach-fwr"
+              value={coachRatings.FWR}
+              onChange={(event) => handleCoachRatingChange("FWR", event.target.value)}
+            >
+              {COACH_SKILL_OPTIONS.map((level) => (
+                <option key={`fwr-${level}`} value={level}>
+                  {level}
+                </option>
+              ))}
+            </select>
+          </div>
         </section>
 
         <div className="careerTeamManagement__layout">
@@ -346,28 +355,24 @@ const CareerTeamManagement = () => {
             <div className="careerTeamManagement__pitch">
               {PITCH_ROLE_ORDER.map((role) => (
                 <div className="careerTeamManagement__pitchRow" key={`pitch-${role}`}>
-                  {lineup[role].map((playerId, index) => {
-                    const slotLabel = `${ROLE_DISPLAY_NAME[role]} ${index + 1}`;
-                    const usedByOthers = getUsedByOthers(playerId);
+                  {lineupSlots[role].map((slot) => {
+                    const player = slot.player;
+                    const coach = slot.coach;
                     return (
-                      <div className="careerTeamManagement__pitchSlot" key={`${role}-${index}`}>
-                        <label htmlFor={`pitch-slot-${role}-${index}`}>{slotLabel}</label>
-                        <select
-                          id={`pitch-slot-${role}-${index}`}
-                          value={playerId || ""}
-                          onChange={(event) => updateSlot(role, index, event.target.value)}
-                        >
-                          <option value="">Select player</option>
-                          {getPlayersSortedForRole(role).map((player) => {
-                            const disabled =
-                              player.id !== playerId && usedByOthers.has(player.id);
-                            return (
-                              <option key={player.id} value={player.id} disabled={disabled}>
-                                {getPlayerLabel(player)}
-                              </option>
-                            );
-                          })}
-                        </select>
+                      <div className="careerTeamManagement__pitchSlot" key={slot.key}>
+                        <label>{slot.label}</label>
+                        {player ? (
+                          <div className="careerTeamManagement__slotMeta">
+                            <div className="careerTeamManagement__slotName">{getPlayerLabel(player)}</div>
+                            {coach?.hasInfo && (
+                              <div className="careerTeamManagement__slotCoach">
+                                <strong>Coach:</strong> {coach.feedbackText}
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="careerTeamManagement__slotMeta">No player assigned</div>
+                        )}
                       </div>
                     );
                   })}
@@ -375,25 +380,27 @@ const CareerTeamManagement = () => {
               ))}
 
               <div className="careerTeamManagement__pitchRow careerTeamManagement__pitchRow--gk">
-                <div className="careerTeamManagement__pitchSlot">
-                  <label htmlFor="pitch-slot-gk">Goalkeeper</label>
-                  <select
-                    id="pitch-slot-gk"
-                    value={lineup.gkId || ""}
-                    onChange={(event) => updateSlot(POSITION.GK, 0, event.target.value)}
-                  >
-                    <option value="">Select player</option>
-                    {getPlayersSortedForRole(POSITION.GK).map((player) => {
-                      const usedByOthers = getUsedByOthers(lineup.gkId);
-                      const disabled = player.id !== lineup.gkId && usedByOthers.has(player.id);
-                      return (
-                        <option key={player.id} value={player.id} disabled={disabled}>
-                          {getPlayerLabel(player)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
+                {lineupSlots[POSITION.GK].map((slot) => {
+                  const player = slot.player;
+                  const coach = slot.coach;
+                  return (
+                    <div className="careerTeamManagement__pitchSlot" key={slot.key}>
+                      <label>{slot.label}</label>
+                      {player ? (
+                        <div className="careerTeamManagement__slotMeta">
+                          <div className="careerTeamManagement__slotName">{getPlayerLabel(player)}</div>
+                          {coach?.hasInfo && (
+                            <div className="careerTeamManagement__slotCoach">
+                              <strong>Coach:</strong> {coach.feedbackText}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="careerTeamManagement__slotMeta">No player assigned</div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 

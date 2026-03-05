@@ -137,6 +137,26 @@
   }
 }
 
+.careerTeamManagement__slotMeta {
+  display: grid;
+  gap: 0.22rem;
+  color: #f8fafc;
+  font-size: 0.78rem;
+  line-height: 1.25;
+}
+
+.careerTeamManagement__slotName {
+  font-weight: 700;
+}
+
+.careerTeamManagement__slotCoach {
+  color: #d1fae5;
+
+  strong {
+    color: #f0fdf4;
+  }
+}
+
 .careerTeamManagement__status {
   margin-top: 0.6rem;
   font-size: 0.9rem;
