@@ -5,7 +5,6 @@ import { useMatchSim } from "../hooks/useMatchSim";
 import CurrentEventBanner from "./currentEventBanner";
 import Scoreboard from "./scoreboard";
 import MatchLog from "./MatchLog";
-import MatchTimeline from "./MatchTimeline";
 import MatchDebug from "./matchDebug";
 import GoalOverlay from "./GoalOverlay";
 import "./matchScreen.scss";
@@ -105,10 +104,6 @@ const Match = () => {
       <div className="matchSim__resultsGrid">
         <Scoreboard matchState={matchState} />
         <MatchLog matchState={matchState} />
-      </div>
-
-      <div className="matchSim__timelineWrap">
-        <MatchTimeline matchState={matchState} />
       </div>
 
       <div className="matchSim__timelineWrap">

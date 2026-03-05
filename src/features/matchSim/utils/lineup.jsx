@@ -1,5 +1,5 @@
 import { FORMATIONS, OUTFIELD_POSITIONS, POSITION } from "./matchSimTypes";
-import { getRoleSelectionScore } from "./ratings";
+import { applyPositionFit, getRoleSelectionScore } from "./ratings";
 
 export const createEmptyLineup = (formation) => {
   const roleCounts = FORMATIONS[formation];
@@ -97,6 +97,52 @@ export const autoFillLineup = (players, formation, variant = 0) => {
   return lineup;
 };
 
+const pickRandomItem = (items, randomFn = Math.random) => {
+  if (!items.length) return null;
+  const index = Math.floor(randomFn() * items.length);
+  return items[index] || null;
+};
+
+const createRoleCandidatePool = (availablePlayers, role) => {
+  const preferred = availablePlayers.filter((player) => player.preferredPos === role);
+  if (preferred.length > 0) return preferred;
+
+  const fallback = availablePlayers
+    .map((player) => ({
+      player,
+      fit: applyPositionFit(player.preferredPos, role),
+      score: getRoleSelectionScore(player, role),
+    }))
+    .filter((entry) => entry.fit > 0.35)
+    .sort((entryA, entryB) => entryB.fit - entryA.fit || entryB.score - entryA.score)
+    .map((entry) => entry.player);
+
+  return fallback;
+};
+
+export const randomFillLineup = (players, formation, randomFn = Math.random) => {
+  const lineup = createEmptyLineup(formation);
+  const remaining = [...players];
+
+  const pickAndRemoveRandom = (role) => {
+    const candidates = createRoleCandidatePool(remaining, role);
+    const chosen = pickRandomItem(candidates, randomFn);
+    if (!chosen) return "";
+
+    const chosenIndex = remaining.findIndex((player) => player.id === chosen.id);
+    if (chosenIndex >= 0) remaining.splice(chosenIndex, 1);
+    return chosen.id;
+  };
+
+  lineup.gkId = pickAndRemoveRandom(POSITION.GK);
+
+  OUTFIELD_POSITIONS.forEach((role) => {
+    lineup[role] = lineup[role].map(() => pickAndRemoveRandom(role));
+  });
+
+  return lineup;
+};
+
 export const updateLineupSlot = (lineup, role, index, playerId) => {
   if (role === POSITION.GK) {
     return {
@@ -113,4 +159,3 @@ export const updateLineupSlot = (lineup, role, index, playerId) => {
     [role]: nextRoleValues,
   };
 };
-

@@ -1,6 +1,7 @@
 /* eslint-disable react/prop-types */
 
 import { EVENT_KIND, TEAM_KEY } from "../utils/matchSimTypes";
+import { getTeamThemeStyle } from "../utils/teamColors";
 
 const formatPossession = (chunksOwned, totalChunks) => {
   if (totalChunks <= 0) return "0.0%";
@@ -10,6 +11,13 @@ const formatPossession = (chunksOwned, totalChunks) => {
 const buildScorerRows = (goalsTimeline, teamKey) => {
   return goalsTimeline.filter((goal) => goal.teamKey === teamKey);
 };
+
+const TeamLabel = ({ setup, teamId, name }) => (
+  <span className="matchSim__teamLabel" style={getTeamThemeStyle(setup, teamId) || undefined}>
+    <span className="matchSim__teamColorIcon" aria-hidden="true" />
+    <span>{name}</span>
+  </span>
+);
 
 const Scoreboard = ({ matchState }) => {
   if (matchState.status === "idle") {
@@ -49,16 +57,22 @@ const Scoreboard = ({ matchState }) => {
       <h2>Scoreboard</h2>
 
       <div className="matchSim__scoreline">
-        <div>{teamAName}</div>
+        <div>
+          <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.A} name={teamAName} />
+        </div>
         <div className="matchSim__scoreNumber">
           {matchState.score[TEAM_KEY.A]} - {matchState.score[TEAM_KEY.B]}
         </div>
-        <div>{teamBName}</div>
+        <div>
+          <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.B} name={teamBName} />
+        </div>
       </div>
 
       <div className="matchSim__scorersGrid">
         <div className="matchSim__scorerCol">
-          <h4>{teamAName} scorers</h4>
+          <h4>
+            <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.A} name={teamAName} /> scorers
+          </h4>
           {teamAScorers.length === 0 ? (
             <div className="matchSim__muted">None</div>
           ) : (
@@ -71,7 +85,9 @@ const Scoreboard = ({ matchState }) => {
         </div>
 
         <div className="matchSim__scorerCol">
-          <h4>{teamBName} scorers</h4>
+          <h4>
+            <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.B} name={teamBName} /> scorers
+          </h4>
           {teamBScorers.length === 0 ? (
             <div className="matchSim__muted">None</div>
           ) : (
@@ -96,14 +112,18 @@ const Scoreboard = ({ matchState }) => {
         </thead>
         <tbody>
           <tr>
-            <td>{teamAName}</td>
+            <td>
+              <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.A} name={teamAName} />
+            </td>
             <td>{formatPossession(matchState.stats[TEAM_KEY.A].possessionChunks, totalChunks)}</td>
             <td>{matchState.stats[TEAM_KEY.A].shots}</td>
             <td>{matchState.stats[TEAM_KEY.A].totalXg.toFixed(2)}</td>
             <td>{matchState.stats[TEAM_KEY.A].goals}</td>
           </tr>
           <tr>
-            <td>{teamBName}</td>
+            <td>
+              <TeamLabel setup={matchState.setup} teamId={TEAM_KEY.B} name={teamBName} />
+            </td>
             <td>{formatPossession(matchState.stats[TEAM_KEY.B].possessionChunks, totalChunks)}</td>
             <td>{matchState.stats[TEAM_KEY.B].shots}</td>
             <td>{matchState.stats[TEAM_KEY.B].totalXg.toFixed(2)}</td>
@@ -118,7 +138,11 @@ const Scoreboard = ({ matchState }) => {
           <div className="matchSim__muted">No key events yet.</div>
         ) : (
           keyEvents.map((event) => (
-            <div key={event.id} className="matchSim__keyEventRow">
+            <div
+              key={event.id}
+              className={`matchSim__keyEventRow${event.teamId ? " matchSim__keyEventRow--team" : ""}`}
+              style={getTeamThemeStyle(matchState.setup, event.teamId) || undefined}
+            >
               {event.minute}' {event.half}: {event.text}
             </div>
           ))

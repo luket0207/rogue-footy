@@ -2,6 +2,7 @@ import { makeDecision } from "../../../engine/utils/makeDecision/makeDecision";
 import { clamp, logistic } from "./math";
 import { createSeededRng } from "./seededRng";
 import { applyTeamTactics } from "./tactics";
+import { createMatchTeamColors } from "./teamColors";
 import { applyPositionFit, computeTeamProfile, playersArrayToMap } from "./ratings";
 import {
   CHUNK_MINUTES,
@@ -20,25 +21,26 @@ const SIX_A_SIDE_TUNING = Object.freeze({
   // Futsal/small-sided profile:
   // - Frequent high-quality transitions
   // - More shots and more conversion than 11-a-side
-  chanceBase: 0.34,
-  chanceSpreadDivisor: 105,
-  chanceMin: 0.18,
-  chanceMax: 0.9,
+  // Dialed back to reduce total goals by roughly ~2 per match on average.
+  chanceBase: 0.29,
+  chanceSpreadDivisor: 112,
+  chanceMin: 0.14,
+  chanceMax: 0.82,
   tempoDivisor: 170,
   tempoMin: 0.8,
   tempoMax: 1.35,
-  xgBase: 0.3,
-  xgSpreadDivisor: 130,
+  xgBase: 0.27,
+  xgSpreadDivisor: 138,
   xgNoiseMin: -0.07,
-  xgNoiseMax: 0.09,
-  xgMin: 0.16,
-  xgMax: 0.82,
+  xgNoiseMax: 0.08,
+  xgMin: 0.14,
+  xgMax: 0.74,
   gkResistanceFactor: 0.72,
-  conversionFloor: 0.34,
-  conversionScale: 0.98,
-  transitionBonusScale: 0.08,
+  conversionFloor: 0.29,
+  conversionScale: 0.88,
+  transitionBonusScale: 0.06,
   goalProbMin: 0.05,
-  goalProbMax: 0.9,
+  goalProbMax: 0.82,
 });
 
 const createTeamStats = () => ({
@@ -123,12 +125,13 @@ const buildScorerWeights = (teamProfile, playersById) => {
 
 export const createMatchContext = ({ seed, chunkCount = DEFAULT_CHUNK_COUNT, players, teamA, teamB }) => {
   const playersById = playersArrayToMap(players);
+  const teamColors = createMatchTeamColors(seed);
 
   const baseA = computeTeamProfile(teamA, playersById);
   const baseB = computeTeamProfile(teamB, playersById);
 
-  const runtimeA = applyTeamTactics(baseA, baseB, teamA.tactics);
-  const runtimeB = applyTeamTactics(baseB, baseA, teamB.tactics);
+  const runtimeA = applyTeamTactics(baseA, baseB, teamA.tactics, teamB.tactics);
+  const runtimeB = applyTeamTactics(baseB, baseA, teamB.tactics, teamA.tactics);
 
   return {
     seed: String(seed || "match-seed"),
@@ -148,11 +151,13 @@ export const createMatchContext = ({ seed, chunkCount = DEFAULT_CHUNK_COUNT, pla
         name: teamA.name,
         formation: teamA.formation,
         tactics: teamA.tactics,
+        colors: teamColors[TEAM_KEY.A],
       },
       [TEAM_KEY.B]: {
         name: teamB.name,
         formation: teamB.formation,
         tactics: teamB.tactics,
+        colors: teamColors[TEAM_KEY.B],
       },
     },
   };

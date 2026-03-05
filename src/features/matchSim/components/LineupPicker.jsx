@@ -38,7 +38,9 @@ const formatPlayerLabel = (player) => {
   const topSkillText = getTopSkills(player)
     .map((skill) => `${skill.label} ${skill.value}`)
     .join(" | ");
-  return `${player.name} (${player.preferredPos}) - ${topSkillText}`;
+  const overallText = Number.isFinite(player.overall) ? `OVR ${player.overall}` : "";
+  const nationalityText = player.nationality ? ` ${player.nationality}` : "";
+  return `${player.name}${nationalityText} (${player.preferredPos}${overallText ? ` ${overallText}` : ""}) - ${topSkillText}`;
 };
 
 const LineupPicker = ({ teamId, lineup, formation, players, onSelectPlayer }) => {
@@ -53,9 +55,18 @@ const LineupPicker = ({ teamId, lineup, formation, players, onSelectPlayer }) =>
 
   const sortedByRole = useMemo(() => {
     const makeSorted = (role) =>
-      [...players].sort(
-        (playerA, playerB) => getRoleSelectionScore(playerB, role) - getRoleSelectionScore(playerA, role)
-      );
+      [...players].sort((playerA, playerB) => {
+        const playerAPrefersRole = playerA.preferredPos === role ? 1 : 0;
+        const playerBPrefersRole = playerB.preferredPos === role ? 1 : 0;
+        if (playerBPrefersRole !== playerAPrefersRole) {
+          return playerBPrefersRole - playerAPrefersRole;
+        }
+
+        const scoreDiff = getRoleSelectionScore(playerB, role) - getRoleSelectionScore(playerA, role);
+        if (scoreDiff !== 0) return scoreDiff;
+
+        return playerA.name.localeCompare(playerB.name);
+      });
 
     return {
       [POSITION.GK]: makeSorted(POSITION.GK),

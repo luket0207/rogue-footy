@@ -2,6 +2,7 @@
 
 import Button, { BUTTON_VARIANT } from "../../../engine/ui/button/button";
 import { POSITION } from "../utils/matchSimTypes";
+import { OPPOSITION_LEVEL_OPTIONS } from "../utils/oppositionGenerator";
 import FormationPicker from "./FormationPicker";
 import TacticPicker from "./TacticPicker";
 import LineupPicker from "./LineupPicker";
@@ -15,6 +16,7 @@ const TeamSetup = ({
   onTacticsChange,
   onLineupPlayerChange,
   onAutoFill,
+  onRandomFill,
   complete,
 }) => {
   return (
@@ -26,11 +28,7 @@ const TeamSetup = ({
         </div>
       </div>
 
-      <FormationPicker
-        id={`${teamId}-formation`}
-        value={teamConfig.formation}
-        onChange={onFormationChange}
-      />
+      <FormationPicker id={`${teamId}-formation`} value={teamConfig.formation} onChange={onFormationChange} />
 
       <TacticPicker teamId={teamId} tactics={teamConfig.tactics} onChange={onTacticsChange} />
 
@@ -46,6 +44,9 @@ const TeamSetup = ({
         <Button variant={BUTTON_VARIANT.SECONDARY} onClick={onAutoFill}>
           Auto Fill {title}
         </Button>
+        <Button variant={BUTTON_VARIANT.SECONDARY} onClick={onRandomFill}>
+          Random Fill {title}
+        </Button>
       </div>
     </section>
   );
@@ -56,16 +57,15 @@ const MatchSetupPanel = ({
   seed,
   onSeedChange,
   onRandomizeSeed,
-  teamAConfig,
-  teamBConfig,
-  onTeamAFormationChange,
-  onTeamBFormationChange,
-  onTeamATacticsChange,
-  onTeamBTacticsChange,
-  onTeamALineupChange,
-  onTeamBLineupChange,
-  onAutoFillTeamA,
-  onAutoFillTeamB,
+  teamConfig,
+  onTeamFormationChange,
+  onTeamTacticsChange,
+  onTeamLineupChange,
+  onAutoFillTeam,
+  onRandomFillTeam,
+  oppositionDifficulty,
+  onOppositionDifficultyChange,
+  difficultyPreview,
   onStartMatch,
   canStart,
   setupError,
@@ -75,45 +75,48 @@ const MatchSetupPanel = ({
       <div className="matchSim__configGrid">
         <div className="matchSim__control matchSim__control--seed">
           <label htmlFor="match-seed">Seed</label>
-          <input
-            id="match-seed"
-            value={seed}
-            onChange={(event) => onSeedChange(event.target.value)}
-            type="text"
-          />
+          <input id="match-seed" value={seed} onChange={(event) => onSeedChange(event.target.value)} type="text" />
           <Button variant={BUTTON_VARIANT.SECONDARY} onClick={onRandomizeSeed}>
             Randomize Seed
           </Button>
         </div>
+
+        <div className="matchSim__control">
+          <label htmlFor="opposition-difficulty">Opposition Difficulty</label>
+          <select
+            id="opposition-difficulty"
+            value={oppositionDifficulty}
+            onChange={(event) => onOppositionDifficultyChange(Number(event.target.value))}
+          >
+            {OPPOSITION_LEVEL_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+          {difficultyPreview && (
+            <div className="matchSim__lineupHint">
+              Your team est: L{difficultyPreview.playerLevel} ({difficultyPreview.playerOverall.toFixed(2)}) | Opp est: L
+              {difficultyPreview.opponentLevel} ({difficultyPreview.opponentOverall.toFixed(2)})
+            </div>
+          )}
+        </div>
       </div>
 
-      <div className="matchSim__teamsGrid">
+      <div className="matchSim__teamsGrid matchSim__teamsGrid--single">
         <TeamSetup
           teamId="team-a"
-          title={teamAConfig.name}
-          teamConfig={teamAConfig}
+          title={teamConfig.name}
+          teamConfig={teamConfig}
           players={players}
-          onFormationChange={onTeamAFormationChange}
-          onTacticsChange={onTeamATacticsChange}
+          onFormationChange={onTeamFormationChange}
+          onTacticsChange={onTeamTacticsChange}
           onLineupPlayerChange={(role, slotIndex, playerId) =>
-            onTeamALineupChange(role, role === POSITION.GK ? 0 : slotIndex, playerId)
+            onTeamLineupChange(role, role === POSITION.GK ? 0 : slotIndex, playerId)
           }
-          onAutoFill={onAutoFillTeamA}
-          complete={!setupError.teamA}
-        />
-
-        <TeamSetup
-          teamId="team-b"
-          title={teamBConfig.name}
-          teamConfig={teamBConfig}
-          players={players}
-          onFormationChange={onTeamBFormationChange}
-          onTacticsChange={onTeamBTacticsChange}
-          onLineupPlayerChange={(role, slotIndex, playerId) =>
-            onTeamBLineupChange(role, role === POSITION.GK ? 0 : slotIndex, playerId)
-          }
-          onAutoFill={onAutoFillTeamB}
-          complete={!setupError.teamB}
+          onAutoFill={onAutoFillTeam}
+          onRandomFill={onRandomFillTeam}
+          complete={!setupError}
         />
       </div>
 
@@ -123,11 +126,7 @@ const MatchSetupPanel = ({
         </Button>
       </div>
 
-      {(setupError.teamA || setupError.teamB) && (
-        <div className="matchSim__errorText">
-          {setupError.teamA || setupError.teamB}
-        </div>
-      )}
+      {setupError && <div className="matchSim__errorText">{setupError}</div>}
     </section>
   );
 };

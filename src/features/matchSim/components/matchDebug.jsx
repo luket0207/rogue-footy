@@ -21,17 +21,43 @@ const BreakdownGroup = ({ title, breakdown }) => (
   </div>
 );
 
-const TeamDebugCard = ({ teamName, teamSnapshot }) => {
+const TeamDebugCard = ({ teamName, teamSetup, teamSnapshot }) => {
   const metrics = teamSnapshot.adjustedMetrics;
   const baseMetrics = teamSnapshot.metrics;
   const deltas = teamSnapshot.tacticBreakdown.totalDelta;
   const metricBreakdown = teamSnapshot.metricBreakdown;
   const overallBreakdown = teamSnapshot.overallRatingBreakdown;
+  const selectedTactics = teamSetup?.tactics || teamSnapshot.tactics;
+  const matchup = teamSnapshot.tacticBreakdown.matchupOutcome;
 
   return (
     <div className="matchSim__debugCard">
       <h4>{teamName}</h4>
       <MetricLine label="overallRating" value={teamSnapshot.overallRating} />
+
+      <div className="matchSim__debugBreakdown">
+        <h5>Tactics</h5>
+        <div className="matchSim__debugMetricLine">
+          <span>attacking</span>
+          <strong>{selectedTactics?.attacking || "N/A"}</strong>
+        </div>
+        <div className="matchSim__debugMetricLine">
+          <span>defensive</span>
+          <strong>{selectedTactics?.defensive || "N/A"}</strong>
+        </div>
+        {matchup?.attackKey && (
+          <div className="matchSim__debugMetricLine">
+            <span>attackVsDefense</span>
+            <strong>{matchup.attackKey}</strong>
+          </div>
+        )}
+        {matchup?.defenseKey && (
+          <div className="matchSim__debugMetricLine">
+            <span>defenseVsAttack</span>
+            <strong>{matchup.defenseKey}</strong>
+          </div>
+        )}
+      </div>
 
       <div className="matchSim__debugMetricsGrid">
         <div>
@@ -78,12 +104,19 @@ const MatchDebug = ({ matchState }) => {
       </p>
 
       <div className="matchSim__debugGrid">
-        <TeamDebugCard teamName={teamAName} teamSnapshot={matchState.teamSnapshots[TEAM_KEY.A]} />
-        <TeamDebugCard teamName={teamBName} teamSnapshot={matchState.teamSnapshots[TEAM_KEY.B]} />
+        <TeamDebugCard
+          teamName={teamAName}
+          teamSetup={matchState.setup[TEAM_KEY.A]}
+          teamSnapshot={matchState.teamSnapshots[TEAM_KEY.A]}
+        />
+        <TeamDebugCard
+          teamName={teamBName}
+          teamSetup={matchState.setup[TEAM_KEY.B]}
+          teamSnapshot={matchState.teamSnapshots[TEAM_KEY.B]}
+        />
       </div>
     </section>
   );
 };
 
 export default MatchDebug;
-

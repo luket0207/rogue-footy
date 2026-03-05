@@ -51,6 +51,10 @@
   gap: 1rem;
 }
 
+.matchSim__teamsGrid--single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .matchSim__teamCard {
   min-width: 0;
   border: 1px solid rgba(0, 0, 0, 0.12);
@@ -166,6 +170,9 @@
 
 .matchSim__teamActions {
   margin-top: 0.7rem;
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
 }
 
 .matchSim__startRow {
@@ -198,6 +205,16 @@
   div {
     overflow-wrap: anywhere;
     word-break: break-word;
+  }
+}
+
+.matchSim__eventBanner--team {
+  border-left-color: var(--match-team-border);
+  background: var(--match-team-primary);
+  color: var(--match-team-text);
+
+  h2 {
+    color: inherit;
   }
 }
 
@@ -392,6 +409,32 @@
   padding: 0.14rem 0;
   overflow-wrap: anywhere;
   word-break: break-word;
+}
+
+.matchSim__keyEventRow--team {
+  margin-bottom: 0.35rem;
+  border-left: 4px solid var(--match-team-border);
+  border-radius: 8px;
+  padding: 0.45rem 0.55rem;
+  background: var(--match-team-primary);
+  color: var(--match-team-text);
+}
+
+.matchSim__teamLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.matchSim__teamColorIcon {
+  width: 0.72rem;
+  height: 0.72rem;
+  border-radius: 999px;
+  background: var(--match-team-primary);
+  border: 2px solid var(--match-team-secondary);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2);
+  flex: 0 0 auto;
 }
 
 .matchSim__metricsGrid {

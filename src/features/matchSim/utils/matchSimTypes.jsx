@@ -8,11 +8,6 @@ export const POSITION = Object.freeze({
 export const OUTFIELD_POSITIONS = Object.freeze([POSITION.DEF, POSITION.MID, POSITION.FWR]);
 
 export const FORMATIONS = Object.freeze({
-  "1-2-2": Object.freeze({
-    [POSITION.DEF]: 1,
-    [POSITION.MID]: 2,
-    [POSITION.FWR]: 2,
-  }),
   "2-2-1": Object.freeze({
     [POSITION.DEF]: 2,
     [POSITION.MID]: 2,
@@ -22,11 +17,6 @@ export const FORMATIONS = Object.freeze({
     [POSITION.DEF]: 2,
     [POSITION.MID]: 1,
     [POSITION.FWR]: 2,
-  }),
-  "1-3-1": Object.freeze({
-    [POSITION.DEF]: 1,
-    [POSITION.MID]: 3,
-    [POSITION.FWR]: 1,
   }),
 });
 

@@ -42,15 +42,18 @@ const PLAYBACK_SPEED_MS = Object.freeze({
   [PLAYBACK_SPEED.SLOW]: 3000,
 });
 
-const GOAL_EVENT_VISIBLE_MS = 3000;
-const GOAL_OVERLAY_MS = 3000;
+const GOAL_PAUSE_SLOW_MS = 3000;
+const GOAL_PAUSE_FAST_MS = 2000;
 
 const getOpposingTeamId = (teamId) => (teamId === TEAM_KEY.A ? TEAM_KEY.B : TEAM_KEY.A);
 const isValidPlaybackSpeed = (speed) => Object.prototype.hasOwnProperty.call(PLAYBACK_SPEED_MS, speed);
-const getEventVisibleMs = (event, baseSpeedMs) => (event?.kind === EVENT_KIND.GOAL ? GOAL_EVENT_VISIBLE_MS : baseSpeedMs);
-const getSequenceVisibleMs = (events, baseSpeedMs) => {
+const getGoalPauseMs = (speed) => (speed === PLAYBACK_SPEED.SLOW ? GOAL_PAUSE_SLOW_MS : GOAL_PAUSE_FAST_MS);
+const getEventVisibleMs = (event, baseSpeedMs, speed) =>
+  event?.kind === EVENT_KIND.GOAL ? getGoalPauseMs(speed) : baseSpeedMs;
+const getSequenceVisibleMs = (events, speed) => {
+  const baseSpeedMs = PLAYBACK_SPEED_MS[speed];
   if (!Array.isArray(events) || events.length === 0) return baseSpeedMs;
-  return events.reduce((sum, event) => sum + getEventVisibleMs(event, baseSpeedMs), 0);
+  return events.reduce((sum, event) => sum + getEventVisibleMs(event, baseSpeedMs, speed), 0);
 };
 
 export const useMatchSim = () => {
@@ -99,12 +102,13 @@ export const useMatchSim = () => {
   const showEventSequence = useCallback(
     (events) => {
       if (!Array.isArray(events) || events.length === 0) return;
+      const speed = playbackSpeedRef.current;
       const baseSpeedMs = PLAYBACK_SPEED_MS[playbackSpeedRef.current];
 
       clearTimeoutList(bannerTimersRef);
       let offsetMs = 0;
       events.forEach((event) => {
-        const eventDurationMs = getEventVisibleMs(event, baseSpeedMs);
+        const eventDurationMs = getEventVisibleMs(event, baseSpeedMs, speed);
         const timeoutId = setTimeout(() => {
           setMatchState((previousState) => {
             const nextState = { ...previousState, currentEvent: event };
@@ -130,12 +134,14 @@ export const useMatchSim = () => {
 
   const triggerGoalOverlay = useCallback((goalEvent) => {
     if (!goalEvent) return;
+    const speed = playbackSpeedRef.current;
+    const overlayDurationMs = getGoalPauseMs(speed);
     if (goalOverlayTimerRef.current) clearTimeout(goalOverlayTimerRef.current);
     setGoalOverlayEvent(goalEvent);
     goalOverlayTimerRef.current = setTimeout(() => {
       setGoalOverlayEvent(null);
       goalOverlayTimerRef.current = null;
-    }, GOAL_OVERLAY_MS);
+    }, overlayDurationMs);
   }, []);
 
   const initializeMatch = useCallback(
@@ -214,10 +220,7 @@ export const useMatchSim = () => {
 
       timerRef.current = createTimer({
         duration,
-        frequencyMs: getSequenceVisibleMs(
-          state.latestChunkEvents,
-          PLAYBACK_SPEED_MS[playbackSpeedRef.current]
-        ),
+        frequencyMs: getSequenceVisibleMs(state.latestChunkEvents, playbackSpeedRef.current),
         onTick: () => {
           const previousState = latestStateRef.current;
           const steppedState = runNextChunk({ ...previousState, status: "running" }, context);
@@ -253,10 +256,7 @@ export const useMatchSim = () => {
             triggerGoalOverlay(goalEvent);
           }
 
-          const nextChunkDelay = getSequenceVisibleMs(
-            steppedState.latestChunkEvents,
-            PLAYBACK_SPEED_MS[playbackSpeedRef.current]
-          );
+          const nextChunkDelay = getSequenceVisibleMs(steppedState.latestChunkEvents, playbackSpeedRef.current);
           if (timerRef.current) {
             timerRef.current.setFrequencyMs(nextChunkDelay);
           }
