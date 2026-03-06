@@ -72,6 +72,94 @@
   padding: 0.8rem;
 }
 
+.careerTeamManagement__lineupImpact {
+  margin-top: 0.25rem;
+  border: 1px solid #dbe4ee;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.55rem;
+
+  h3 {
+    margin: 0 0 0.3rem;
+    color: #0f172a;
+    font-size: 0.9rem;
+  }
+
+  p {
+    margin: 0 0 0.45rem;
+    color: #334155;
+    font-size: 0.76rem;
+  }
+}
+
+.careerTeamManagement__lineupImpactGrid {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.careerTeamManagement__lineupImpactRow {
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr) 72px 44px;
+  align-items: center;
+  gap: 0.4rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.28rem 0.4rem;
+  background: #f8fafc;
+  font-size: 0.75rem;
+}
+
+.careerTeamManagement__lineupImpactSlot {
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.careerTeamManagement__lineupImpactName {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #1e293b;
+}
+
+.careerTeamManagement__lineupImpactValue {
+  justify-self: end;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.careerTeamManagement__lineupImpactDelta {
+  justify-self: end;
+  font-weight: 800;
+  color: #334155;
+}
+
+.careerTeamManagement__lineupImpactDelta.is-positive {
+  color: #0f7a2e;
+}
+
+.careerTeamManagement__lineupImpactDelta.is-negative {
+  color: #9f1239;
+}
+
+.careerTeamManagement__lineupImpactTotal {
+  margin-top: 0.42rem;
+  font-size: 0.8rem;
+  color: #334155;
+
+  strong {
+    color: #0f172a;
+  }
+
+  .is-positive {
+    color: #0f7a2e;
+  }
+
+  .is-negative {
+    color: #9f1239;
+  }
+}
+
 .careerTeamManagement__pitch {
   position: relative;
   margin-top: 0.4rem;
@@ -275,5 +363,9 @@
 @media (max-width: 980px) {
   .careerTeamManagement__layout {
     grid-template-columns: 1fr;
+  }
+
+  .careerTeamManagement__lineupImpactRow {
+    grid-template-columns: 82px minmax(0, 1fr) 66px 40px;
   }
 }

@@ -20,23 +20,23 @@ const DEFAULT_AWAY_COLOR = "#f59e0b";
 const MIN_COLOR_CONTRAST = 1.8;
 const DEFAULT_PLAYER_TACTICS = Object.freeze({
   attacking: ATTACKING_TACTIC.DIRECT,
-  defensive: DEFENSIVE_TACTIC.MID_BLOCK,
+  defensive: DEFENSIVE_TACTIC.LOW_BLOCK,
 });
 const TEAM_DETAILS_STEP = 0;
 const SLOT_QUEUE_LENGTH = 4;
 
 const OVERALL_ROLL_TABLE = Object.freeze([
-  Object.freeze({ overall: 68, probability: 7.5 }),
-  Object.freeze({ overall: 69, probability: 12 }),
-  Object.freeze({ overall: 70, probability: 20 }),
-  Object.freeze({ overall: 71, probability: 20 }),
-  Object.freeze({ overall: 72, probability: 15 }),
-  Object.freeze({ overall: 73, probability: 11 }),
-  Object.freeze({ overall: 74, probability: 6.5 }),
-  Object.freeze({ overall: 75, probability: 4 }),
-  Object.freeze({ overall: 76, probability: 2.5 }),
-  Object.freeze({ overall: 77, probability: 1 }),
-  Object.freeze({ overall: 78, probability: 0.5 }),
+  Object.freeze({ overall: 65, probability: 7.5 }),
+  Object.freeze({ overall: 66, probability: 12 }),
+  Object.freeze({ overall: 67, probability: 20 }),
+  Object.freeze({ overall: 68, probability: 20 }),
+  Object.freeze({ overall: 69, probability: 15 }),
+  Object.freeze({ overall: 70, probability: 11 }),
+  Object.freeze({ overall: 71, probability: 6.5 }),
+  Object.freeze({ overall: 72, probability: 4 }),
+  Object.freeze({ overall: 73, probability: 2.5 }),
+  Object.freeze({ overall: 74, probability: 1 }),
+  Object.freeze({ overall: 75, probability: 0.5 }),
 ]);
 const OVERALL_ROLL_TOTAL = OVERALL_ROLL_TABLE.reduce(
   (total, row) => total + row.probability,

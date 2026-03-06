@@ -52,7 +52,7 @@ const TeamSelection = () => {
       "Team A",
       "2-2-1",
       ATTACKING_TACTIC.POSSESSION,
-      DEFENSIVE_TACTIC.MID_BLOCK,
+      DEFENSIVE_TACTIC.LOW_BLOCK,
       0
     )
   );

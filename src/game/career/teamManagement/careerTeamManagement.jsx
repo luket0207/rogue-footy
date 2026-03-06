@@ -8,6 +8,8 @@ import {
   DEFENSIVE_TACTIC_OPTIONS,
   POSITION,
 } from "../../../features/matchSim/utils/matchSimTypes";
+import { computeTeamProfile } from "../../../features/matchSim/utils/ratings";
+import { computeTacticLineupImpactFromProfile } from "../../../features/matchSim/utils/tactics";
 import { createCoachAssessment } from "../utils/coachReadings";
 import {
   createCareerLineupFromLegacySlots,
@@ -35,7 +37,7 @@ const ROLE_PRIORITY = Object.freeze({
 
 const DEFAULT_PLAYER_TACTICS = Object.freeze({
   attacking: ATTACKING_TACTIC.DIRECT,
-  defensive: DEFENSIVE_TACTIC.MID_BLOCK,
+  defensive: DEFENSIVE_TACTIC.LOW_BLOCK,
 });
 const COACH_SKILL_OPTIONS = Object.freeze([1, 2, 3, 4, 5]);
 const DEFAULT_COACH_RATINGS = Object.freeze({
@@ -81,6 +83,15 @@ const renderStatPill = (value) => {
 
 const getPlayerLabel = (player) =>
   `${player.name} (${POSITION_LABEL[player.preferredPos] || player.preferredPos}, OVR ${Number(player.overall) || 0})`;
+
+const IMPACT_ORDER = Object.freeze([
+  Object.freeze({ role: POSITION.FWR, index: 0 }),
+  Object.freeze({ role: POSITION.MID, index: 0 }),
+  Object.freeze({ role: POSITION.MID, index: 1 }),
+  Object.freeze({ role: POSITION.DEF, index: 0 }),
+  Object.freeze({ role: POSITION.DEF, index: 1 }),
+  Object.freeze({ role: POSITION.GK, index: 0 }),
+]);
 
 const sanitizeLineup = (lineup, formation, validIds) => {
   const normalized = normalizeCareerLineup(lineup, formation);
@@ -213,6 +224,36 @@ const CareerTeamManagement = () => {
       [POSITION.GK]: [buildSlot(POSITION.GK, 0, "Goalkeeper")],
     };
   }, [coachRatings, lineup, playersById, tactics]);
+
+  const lineupImpactRows = useMemo(
+    () =>
+      IMPACT_ORDER.map(({ role, index }) => {
+        const slot = lineupSlots?.[role]?.[index];
+        if (!slot) return null;
+        const impact = Number(slot.coach?.trueImpact) || 0;
+        return {
+          key: slot.key,
+          label: slot.label,
+          playerName: slot.player?.name || "Not assigned",
+          impact,
+          delta: impact - 50,
+        };
+      }).filter(Boolean),
+    [lineupSlots]
+  );
+
+  const lineupImpactTotal = useMemo(() => {
+    const profile = computeTeamProfile(
+      {
+        name: playerTeam?.name || "Player Team",
+        formation,
+        lineup,
+      },
+      playersById
+    );
+    const impact = computeTacticLineupImpactFromProfile(profile, tactics);
+    return Number(impact?.netLineupImpact) || 0;
+  }, [formation, lineup, playerTeam?.name, playersById, tactics]);
 
   const handleSave = () => {
     if (!playerTeam || !isComplete) return;
@@ -351,7 +392,35 @@ const CareerTeamManagement = () => {
 
         <div className="careerTeamManagement__layout">
           <section className="careerTeamManagement__lineup">
-            <h2>Lineup Assignment</h2>
+            <h2>Lineup</h2>
+            <div className="careerTeamManagement__lineupImpact">
+              <h3>Tactic Impact</h3>
+              <p>Final reading of each player's effect on overall rating for the selected tactics.</p>
+              <div className="careerTeamManagement__lineupImpactGrid">
+                {lineupImpactRows.map((row) => (
+                  <div className="careerTeamManagement__lineupImpactRow" key={row.key}>
+                    <span className="careerTeamManagement__lineupImpactSlot">{row.label}</span>
+                    <span className="careerTeamManagement__lineupImpactName">{row.playerName}</span>
+                    <span className="careerTeamManagement__lineupImpactValue">{row.impact}/100</span>
+                    <span
+                      className={`careerTeamManagement__lineupImpactDelta ${
+                        row.delta >= 0 ? "is-positive" : "is-negative"
+                      }`}
+                    >
+                      {row.delta >= 0 ? "+" : ""}
+                      {row.delta}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              <div className="careerTeamManagement__lineupImpactTotal">
+                Net lineup impact (match model):{" "}
+                <strong className={lineupImpactTotal >= 0 ? "is-positive" : "is-negative"}>
+                  {lineupImpactTotal >= 0 ? "+" : ""}
+                  {lineupImpactTotal.toFixed(2)}
+                </strong>
+              </div>
+            </div>
             <div className="careerTeamManagement__pitch">
               {PITCH_ROLE_ORDER.map((role) => (
                 <div className="careerTeamManagement__pitchRow" key={`pitch-${role}`}>

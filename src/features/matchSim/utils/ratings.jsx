@@ -333,6 +333,18 @@ export const computeTeamProfile = (teamConfig, playersById) => {
   );
   const gkIndex = clamp(gkGoalkeeping, 8, 98);
   const overallRatingBreakdown = computeOverallRatingBreakdown(baseMetrics, finishingIndex, gkIndex);
+  const lineupPlayers = {
+    [POSITION.GK]: gkPlayer ? [gkPlayer] : [],
+    [POSITION.DEF]: (lineup[POSITION.DEF] || [])
+      .map((playerId) => playersById[playerId])
+      .filter(Boolean),
+    [POSITION.MID]: (lineup[POSITION.MID] || [])
+      .map((playerId) => playersById[playerId])
+      .filter(Boolean),
+    [POSITION.FWR]: (lineup[POSITION.FWR] || [])
+      .map((playerId) => playersById[playerId])
+      .filter(Boolean),
+  };
 
   return {
     teamName: teamConfig.name,
@@ -348,6 +360,7 @@ export const computeTeamProfile = (teamConfig, playersById) => {
     gkIndex,
     teamOffBall,
     coherence,
+    lineupPlayers,
     overallRating: overallRatingBreakdown.total,
     overallRatingBreakdown,
     metricBreakdown: {

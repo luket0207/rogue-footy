@@ -1,5 +1,6 @@
 import { applyPositionFit } from "../../../features/matchSim/utils/ratings";
 import { ATTACKING_TACTIC, DEFENSIVE_TACTIC, POSITION } from "../../../features/matchSim/utils/matchSimTypes";
+import { computePlayerTacticImpactScore } from "../../../features/matchSim/utils/tactics";
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 
@@ -20,79 +21,13 @@ const getCoachDepthForRole = (assignedRole, coachRatings) => {
   return clamp(Number(coachRatings?.FWR) || 1, 1, 5);
 };
 
-const getAttackFit = (player, role, attacking) => {
-  const finishing = Number(player?.finishing) || 0;
-  const passing = Number(player?.passing) || 0;
-  const control = Number(player?.control) || 0;
-  const defending = Number(player?.defending) || 0;
-  const offBall = Number(player?.offBall) || 0;
-  const workRate = Number(player?.workRate) || 0;
-
-  if (attacking === ATTACKING_TACTIC.POSSESSION) {
-    const base = 0.36 * passing + 0.34 * control + 0.2 * workRate + 0.1 * offBall;
-    const roleAdjust =
-      role === POSITION.MID ? 7 : role === POSITION.DEF ? -4 : role === POSITION.FWR ? -1 : -10;
-    return clamp(base + roleAdjust, 0, 100);
-  }
-
-  if (attacking === ATTACKING_TACTIC.COUNTER) {
-    const base = 0.4 * offBall + 0.3 * finishing + 0.2 * control + 0.1 * workRate;
-    const roleAdjust =
-      role === POSITION.FWR ? 7 : role === POSITION.MID ? 3 : role === POSITION.DEF ? -5 : -15;
-    return clamp(base + roleAdjust, 0, 100);
-  }
-
-  // DIRECT
-  const base = 0.44 * finishing + 0.24 * offBall + 0.2 * passing + 0.12 * control;
-  const roleAdjust =
-    role === POSITION.FWR ? 8 : role === POSITION.MID ? 1 : role === POSITION.DEF ? -6 : -16;
-  return clamp(base + roleAdjust + defending * 0.02, 0, 100);
-};
-
-const getDefenseFit = (player, role, defensive) => {
-  const passing = Number(player?.passing) || 0;
-  const control = Number(player?.control) || 0;
-  const defending = Number(player?.defending) || 0;
-  const offBall = Number(player?.offBall) || 0;
-  const workRate = Number(player?.workRate) || 0;
-  const goalkeeping = Number(player?.goalkeeping) || 0;
-
-  if (role === POSITION.GK) {
-    if (defensive === DEFENSIVE_TACTIC.LOW_BLOCK) {
-      return clamp(0.7 * goalkeeping + 0.2 * control + 0.1 * passing, 0, 100);
-    }
-    if (defensive === DEFENSIVE_TACTIC.HIGH_PRESS) {
-      return clamp(0.42 * goalkeeping + 0.3 * passing + 0.28 * control, 0, 100);
-    }
-    return clamp(0.54 * goalkeeping + 0.24 * control + 0.22 * passing, 0, 100);
-  }
-
-  if (defensive === DEFENSIVE_TACTIC.HIGH_PRESS) {
-    const base = 0.36 * workRate + 0.32 * defending + 0.2 * offBall + 0.12 * control;
-    const roleAdjust =
-      role === POSITION.MID ? 7 : role === POSITION.DEF ? 3 : role === POSITION.FWR ? -3 : -12;
-    return clamp(base + roleAdjust, 0, 100);
-  }
-
-  if (defensive === DEFENSIVE_TACTIC.LOW_BLOCK) {
-    const base = 0.44 * defending + 0.28 * workRate + 0.18 * control + 0.1 * goalkeeping;
-    const roleAdjust =
-      role === POSITION.DEF ? 5 : role === POSITION.MID ? 1 : role === POSITION.FWR ? -6 : 0;
-    return clamp(base + roleAdjust, 0, 100);
-  }
-
-  // MID_BLOCK
-  const base = 0.42 * defending + 0.3 * workRate + 0.16 * control + 0.12 * passing;
-  const roleAdjust =
-    role === POSITION.DEF ? 6 : role === POSITION.MID ? 2 : role === POSITION.FWR ? -5 : -10;
-  return clamp(base + roleAdjust, 0, 100);
-};
-
 const getExactTierLabel = (score) => {
-  if (score >= 85) return "elite";
-  if (score >= 70) return "strong";
-  if (score >= 55) return "good";
-  if (score >= 40) return "mixed";
+  if (score >= 91) return "world class";
+  if (score >= 86) return "elite";
+  if (score >= 80) return "very good";
+  if (score >= 74) return "good";
+  if (score >= 60) return "ok";
+  if (score >= 45) return "mixed";
   return "poor";
 };
 
@@ -100,20 +35,24 @@ const getFeedbackForDepth = (impactScore, depth) => {
   if (depth <= 1) return "";
 
   if (depth === 2) {
-    return impactScore > 50 ? "Good fit." : "Bad fit.";
+    if (impactScore >= 74) return "Looks good.";
+    if (impactScore >= 56) return "Could be okay.";
+    return "Looks weak.";
   }
 
   if (depth === 3) {
-    if (impactScore > 80) return "Great fit.";
-    if (impactScore > 50) return "Good fit.";
-    return "Bad fit.";
+    if (impactScore >= 84) return "Great fit.";
+    if (impactScore >= 66) return "Good fit.";
+    if (impactScore >= 48) return "Mixed fit.";
+    return "Poor fit.";
   }
 
   if (depth === 4) {
-    if (impactScore > 80) return "Amazing fit.";
-    if (impactScore > 60) return "Great fit.";
-    if (impactScore > 30) return "Mixed fit.";
-    return "Bad, really bad.";
+    if (impactScore >= 90) return "Amazing fit.";
+    if (impactScore >= 76) return "Great fit.";
+    if (impactScore >= 62) return "Good fit.";
+    if (impactScore >= 46) return "Mixed fit.";
+    return "Very poor fit.";
   }
 
   const exact = Math.round(impactScore);
@@ -121,8 +60,17 @@ const getFeedbackForDepth = (impactScore, depth) => {
 };
 
 export const createCoachAssessment = ({ player, assignedRole, tactics, coachRatings }) => {
-  const attack = getAttackFit(player, assignedRole, tactics?.attacking);
-  const defense = getDefenseFit(player, assignedRole, tactics?.defensive);
+  const resolvedTactics = {
+    attacking: tactics?.attacking || ATTACKING_TACTIC.DIRECT,
+    defensive: tactics?.defensive || DEFENSIVE_TACTIC.LOW_BLOCK,
+  };
+  const impact = computePlayerTacticImpactScore({
+    player,
+    assignedRole,
+    tactics: resolvedTactics,
+  });
+  const attack = impact.attackFit;
+  const defense = impact.defenseFit;
   const blend = ROLE_BLEND[assignedRole] || ROLE_BLEND[POSITION.MID];
   const positionFit = applyPositionFit(player?.preferredPos, assignedRole);
   const trueImpact = clamp((attack * blend.attack + defense * blend.defense) * positionFit, 0, 100);

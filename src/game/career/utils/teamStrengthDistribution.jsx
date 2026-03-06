@@ -1,16 +1,16 @@
 import { createSeededRng } from "../../../features/matchSim/utils/seededRng";
 
 export const LEAGUE_TIER_STRENGTH_RANGES = Object.freeze({
-  1: Object.freeze({ min: 88, max: 93 }),
-  2: Object.freeze({ min: 86, max: 91 }),
-  3: Object.freeze({ min: 84, max: 89 }),
-  4: Object.freeze({ min: 82, max: 87 }),
-  5: Object.freeze({ min: 80, max: 85 }),
-  6: Object.freeze({ min: 78, max: 83 }),
-  7: Object.freeze({ min: 76, max: 81 }),
-  8: Object.freeze({ min: 74, max: 79 }),
-  9: Object.freeze({ min: 72, max: 77 }),
-  10: Object.freeze({ min: 70, max: 75 }),
+  1: Object.freeze({ min: 86, max: 91 }),
+  2: Object.freeze({ min: 84, max: 89 }),
+  3: Object.freeze({ min: 82, max: 87 }),
+  4: Object.freeze({ min: 80, max: 85 }),
+  5: Object.freeze({ min: 78, max: 83 }),
+  6: Object.freeze({ min: 76, max: 81 }),
+  7: Object.freeze({ min: 74, max: 79 }),
+  8: Object.freeze({ min: 72, max: 77 }),
+  9: Object.freeze({ min: 70, max: 75 }),
+  10: Object.freeze({ min: 68, max: 73 }),
 });
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));

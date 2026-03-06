@@ -8,6 +8,16 @@ import "./careerCupDraw.scss";
 const formatFixtureLabel = (fixture) =>
   `${fixture.matchIndex}. ${fixture.homeTeamName} vs ${fixture.awayTeamName}`;
 
+const buildAcknowledgedDayNotice = (careerState) => {
+  const seasonNumber = Number(careerState?.season?.seasonNumber) || 1;
+  const dayNumber = Number(careerState?.season?.currentDay) || 1;
+  return {
+    seasonNumber,
+    lastShownDay: dayNumber,
+    acknowledgedAt: new Date().toISOString(),
+  };
+};
+
 const normalizePendingDraws = (pendingCupDraw) => {
   if (Array.isArray(pendingCupDraw?.draws) && pendingCupDraw.draws.length > 0) {
     return pendingCupDraw.draws;
@@ -42,6 +52,7 @@ const CareerCupDraw = () => {
   const { gameState, setGameState, setGameValue } = useGame();
   const [revealedById, setRevealedById] = useState({});
   const [activeDrawIndex, setActiveDrawIndex] = useState(0);
+  const [completedDrawsSummary, setCompletedDrawsSummary] = useState([]);
   const pendingCupDraw = gameState?.career?.pendingCupDraw || null;
 
   useEffect(() => {
@@ -51,6 +62,9 @@ const CareerCupDraw = () => {
   useEffect(() => {
     setRevealedById({});
     setActiveDrawIndex(0);
+    if (pendingCupDraw?.id) {
+      setCompletedDrawsSummary([]);
+    }
   }, [pendingCupDraw?.id, pendingCupDraw?.drawCount]);
 
   const drawEntries = useMemo(() => normalizePendingDraws(pendingCupDraw), [pendingCupDraw]);
@@ -60,6 +74,21 @@ const CareerCupDraw = () => {
     [activeDraw?.fixtures]
   );
   const isCurrentRevealed = !!(activeDraw?.id && revealedById[activeDraw.id]);
+
+  const navigateToCalendarWithSuppressedDayModal = () => {
+    setGameState((previous) => {
+      const previousCareer = previous?.career;
+      return {
+        ...previous,
+        career: {
+          ...(previousCareer && typeof previousCareer === "object" ? previousCareer : {}),
+          suppressNextDayNotice: true,
+          dayTransitionNotice: buildAcknowledgedDayNotice(previousCareer),
+        },
+      };
+    });
+    navigate("/career/calendar", { replace: true });
+  };
 
   const handleApplyDraws = (drawsToApply) => {
     const entries = Array.isArray(drawsToApply) ? drawsToApply : [];
@@ -96,22 +125,22 @@ const CareerCupDraw = () => {
       };
     });
 
-    if (remainingDraws.length === 0) {
-      navigate("/career/calendar", { replace: true });
-      return;
-    }
-
     setRevealedById({});
     setActiveDrawIndex(0);
+    return remainingDraws.length;
   };
 
   const handleConfirmCurrent = () => {
     if (!activeDraw || !isCurrentRevealed) return;
-    handleApplyDraws([activeDraw]);
+    const remainingCount = handleApplyDraws([activeDraw]);
+    if (remainingCount === 0) {
+      navigateToCalendarWithSuppressedDayModal();
+    }
   };
 
   const handleCompleteAll = () => {
     if (drawEntries.length === 0) return;
+    setCompletedDrawsSummary(drawEntries);
     handleApplyDraws(drawEntries);
   };
 
@@ -122,6 +151,43 @@ const CareerCupDraw = () => {
       [activeDraw.id]: true,
     }));
   };
+
+  if (completedDrawsSummary.length > 0) {
+    return (
+      <div className="careerCupDraw">
+        <section className="careerCupDraw__panel">
+          <h1>Cup Draw Day Results</h1>
+          <p>All draw results are complete. Review outcomes before returning.</p>
+          <section className="careerCupDraw__drawResults">
+            {completedDrawsSummary.map((draw) => (
+              <article key={draw.id} className="careerCupDraw__drawResultCard">
+                <h2>
+                  {draw.competitionLabel} - {draw.roundLabel}
+                </h2>
+                <p>
+                  Scheduled match day: {draw.scheduledDayName} Day {draw.scheduledDayNumber}
+                </p>
+                {Array.isArray(draw.fixtures) && draw.fixtures.length > 0 ? (
+                  <ol>
+                    {draw.fixtures.map((fixture) => (
+                      <li key={fixture.id}>{formatFixtureLabel(fixture)}</li>
+                    ))}
+                  </ol>
+                ) : (
+                  <p>No fixtures available for this draw.</p>
+                )}
+              </article>
+            ))}
+          </section>
+          <div className="careerCupDraw__actions">
+            <Button variant={BUTTON_VARIANT.PRIMARY} onClick={navigateToCalendarWithSuppressedDayModal}>
+              Return to Calendar
+            </Button>
+          </div>
+        </section>
+      </div>
+    );
+  }
 
   if (!pendingCupDraw || drawEntries.length === 0) {
     return (

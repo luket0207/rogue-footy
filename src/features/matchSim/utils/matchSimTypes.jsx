@@ -26,12 +26,17 @@ export const ATTACKING_TACTIC = Object.freeze({
   POSSESSION: "POSSESSION",
   DIRECT: "DIRECT",
   COUNTER: "COUNTER",
+  CROSSES: "CROSSES",
+  TIKI_TAKA: "TIKI_TAKA",
+  LONG_SHOTS: "LONG_SHOTS",
+  HOLD_UP_PLAY: "HOLD_UP_PLAY",
 });
 
 export const DEFENSIVE_TACTIC = Object.freeze({
   HIGH_PRESS: "HIGH_PRESS",
   MID_BLOCK: "MID_BLOCK",
   LOW_BLOCK: "LOW_BLOCK",
+  ZONAL: "ZONAL",
 });
 
 export const ATTACKING_TACTIC_OPTIONS = Object.freeze(Object.values(ATTACKING_TACTIC));

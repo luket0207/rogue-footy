@@ -29,6 +29,7 @@ const TeamDebugCard = ({ teamName, teamSetup, teamSnapshot }) => {
   const overallBreakdown = teamSnapshot.overallRatingBreakdown;
   const selectedTactics = teamSetup?.tactics || teamSnapshot.tactics;
   const matchup = teamSnapshot.tacticBreakdown.matchupOutcome;
+  const matrix = teamSnapshot.tacticBreakdown.skillMatrixOutcome;
 
   return (
     <div className="matchSim__debugCard">
@@ -56,6 +57,42 @@ const TeamDebugCard = ({ teamName, teamSetup, teamSnapshot }) => {
             <span>defenseVsAttack</span>
             <strong>{matchup.defenseKey}</strong>
           </div>
+        )}
+        {matrix && (
+          <>
+            <div className="matchSim__debugMetricLine">
+              <span>matrixAttackScore</span>
+              <strong>{matrix.attackingOutcome.normalizedScore.toFixed(2)}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>matrixDefenseScore</span>
+              <strong>{matrix.defensiveOutcome.normalizedScore.toFixed(2)}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>attackBonusLevel</span>
+              <strong>{matrix.attackingBonusLevel}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>defenseBonusLevel</span>
+              <strong>{matrix.defensiveBonusLevel}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>attackOverallAdj</span>
+              <strong>{(matrix.attackingLineupImpact / 50).toFixed(2)}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>defenseOverallAdj</span>
+              <strong>{(matrix.defensiveLineupImpact / 50).toFixed(2)}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>netLineupImpact</span>
+              <strong>{matrix.netLineupImpact.toFixed(2)}</strong>
+            </div>
+            <div className="matchSim__debugMetricLine">
+              <span>tacticSelectionContribution</span>
+              <strong>{matrix.tacticSelectionContribution.toFixed(2)}</strong>
+            </div>
+          </>
         )}
       </div>
 

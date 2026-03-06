@@ -25,7 +25,7 @@ const CAREER_MATCH_FORMATION = DEFAULT_CAREER_FORMATION;
 
 const DEFAULT_PLAYER_TACTICS = Object.freeze({
   attacking: ATTACKING_TACTIC.DIRECT,
-  defensive: DEFENSIVE_TACTIC.MID_BLOCK,
+  defensive: DEFENSIVE_TACTIC.LOW_BLOCK,
 });
 const DEFAULT_HOME_COLOR = "#1d4ed8";
 const DEFAULT_AWAY_COLOR = "#b91c1c";
@@ -133,13 +133,20 @@ const resolvePlayerTeamTactics = (playerTeam) => {
 const resolveAiTactics = (teamStrength, rng) => {
   if (teamStrength >= 90) {
     return {
-      attacking: rng.random() < 0.5 ? ATTACKING_TACTIC.POSSESSION : ATTACKING_TACTIC.COUNTER,
+      attacking:
+        rng.random() < 0.5 ? ATTACKING_TACTIC.TIKI_TAKA : ATTACKING_TACTIC.COUNTER,
       defensive: DEFENSIVE_TACTIC.HIGH_PRESS,
     };
   }
   if (teamStrength >= 84) {
+    const roll = rng.random();
     return {
-      attacking: rng.random() < 0.5 ? ATTACKING_TACTIC.POSSESSION : ATTACKING_TACTIC.DIRECT,
+      attacking:
+        roll < 0.34
+          ? ATTACKING_TACTIC.POSSESSION
+          : roll < 0.67
+            ? ATTACKING_TACTIC.CROSSES
+            : ATTACKING_TACTIC.DIRECT,
       defensive: DEFENSIVE_TACTIC.MID_BLOCK,
     };
   }
@@ -198,14 +205,14 @@ const createAiLineupPlayers = ({ teamId, teamStrength, seed }) => {
   const mids = pickNearestByOverall({
     candidates: byRole[POSITION.MID],
     count: 2,
-    targetOverall: teamStrength + 1,
+    targetOverall: teamStrength,
     usedIds,
     rng,
   });
   const fwrs = pickNearestByOverall({
     candidates: byRole[POSITION.FWR],
     count: 1,
-    targetOverall: teamStrength + 2,
+    targetOverall: teamStrength,
     usedIds,
     rng,
   });

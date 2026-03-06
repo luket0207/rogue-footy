@@ -51,7 +51,6 @@ const isValidPlaybackSpeed = (speed) => Object.prototype.hasOwnProperty.call(PLA
 const getGoalPauseMs = (speed) => (speed === PLAYBACK_SPEED.SLOW ? GOAL_PAUSE_SLOW_MS : GOAL_PAUSE_FAST_MS);
 const getEventVisibleMs = (event, baseSpeedMs, speed) =>
   event?.kind === EVENT_KIND.GOAL ? getGoalPauseMs(speed) : baseSpeedMs;
-const shouldPauseForGoalOverlay = (speed) => speed === PLAYBACK_SPEED.VERY_FAST;
 const isTimerRunning = (timer) => {
   if (!timer || typeof timer.getState !== "function") return false;
   return !!timer.getState()?.isRunning;
@@ -69,7 +68,6 @@ export const useMatchSim = () => {
   const kickoffTeamRef = useRef(TEAM_KEY.A);
   const bannerTimersRef = useRef([]);
   const goalOverlayTimerRef = useRef(null);
-  const goalPauseUntilRef = useRef(0);
   const playbackSpeedRef = useRef(PLAYBACK_SPEED.FAST);
   const pendingMinuteEventsRef = useRef([]);
 
@@ -106,7 +104,6 @@ export const useMatchSim = () => {
       stopTimer();
       clearTimeoutList(bannerTimersRef);
       if (goalOverlayTimerRef.current) clearTimeout(goalOverlayTimerRef.current);
-      goalPauseUntilRef.current = 0;
       pendingMinuteEventsRef.current = [];
     };
   }, [clearTimeoutList, stopTimer]);
@@ -173,7 +170,6 @@ export const useMatchSim = () => {
       playbackSpeedRef.current = PLAYBACK_SPEED.FAST;
       setPlaybackSpeedState(PLAYBACK_SPEED.FAST);
       contextRef.current = context;
-      goalPauseUntilRef.current = 0;
       pendingMinuteEventsRef.current = [];
       kickoffTeamRef.current = context.rng.random() < 0.5 ? TEAM_KEY.A : TEAM_KEY.B;
       const initialState = createInitialMatchState(context, "interactive");
@@ -238,13 +234,6 @@ export const useMatchSim = () => {
         duration,
         frequencyMs: PLAYBACK_SPEED_MS[playbackSpeedRef.current],
         onTick: () => {
-          if (goalPauseUntilRef.current > 0) {
-            if (Date.now() < goalPauseUntilRef.current) {
-              return;
-            }
-            goalPauseUntilRef.current = 0;
-          }
-
           const previousState = latestStateRef.current;
           const nextMinute = Math.min(MATCH_TOTAL_MINUTES, previousState.currentMinute + 1);
           const shouldResolveChunk =
@@ -315,9 +304,6 @@ export const useMatchSim = () => {
 
           if (goalEvent) {
             triggerGoalOverlay(goalEvent);
-            if (shouldPauseForGoalOverlay(playbackSpeedRef.current)) {
-              goalPauseUntilRef.current = Date.now() + getGoalPauseMs(playbackSpeedRef.current);
-            }
           }
 
           const nextChunkDelay = PLAYBACK_SPEED_MS[playbackSpeedRef.current];
@@ -364,7 +350,6 @@ export const useMatchSim = () => {
 
     if (targetMinute == null) return;
 
-    goalPauseUntilRef.current = 0;
     const kickoffTeam = kickoffTeamRef.current;
     appendKickOffEvent(kickoffTeam);
     kickoffTeamRef.current = getOpposingTeamId(kickoffTeam);
@@ -381,7 +366,6 @@ export const useMatchSim = () => {
       clearTimeout(goalOverlayTimerRef.current);
       goalOverlayTimerRef.current = null;
     }
-    goalPauseUntilRef.current = 0;
     setGoalOverlayEvent(null);
 
     if (!contextRef.current) {
@@ -403,7 +387,6 @@ export const useMatchSim = () => {
     stopTimer();
     clearTimeoutList(bannerTimersRef);
     contextRef.current = null;
-    goalPauseUntilRef.current = 0;
     pendingMinuteEventsRef.current = [];
     if (goalOverlayTimerRef.current) {
       clearTimeout(goalOverlayTimerRef.current);

@@ -365,6 +365,7 @@ const CareerCalendar = () => {
     [championsCup]
   );
   const dayTransitionNotice = gameState?.career?.dayTransitionNotice || {};
+  const suppressNextDayNotice = !!gameState?.career?.suppressNextDayNotice;
   const lastShownDayForSeason =
     Number(dayTransitionNotice?.seasonNumber) === currentSeasonNumber
       ? Number(dayTransitionNotice?.lastShownDay) || 1
@@ -446,6 +447,23 @@ const CareerCalendar = () => {
   }, [currentDayData?.monthIndex, seasonMonths]);
 
   useEffect(() => {
+    if (suppressNextDayNotice) {
+      setGameState((previous) => ({
+        ...previous,
+        career: {
+          ...(previous?.career && typeof previous.career === "object" ? previous.career : {}),
+          suppressNextDayNotice: false,
+          dayTransitionNotice: {
+            seasonNumber: currentSeasonNumber,
+            lastShownDay: currentDay,
+            acknowledgedAt: new Date().toISOString(),
+          },
+        },
+      }));
+      setPendingDayNoticeDay(0);
+      return;
+    }
+
     if (!currentDayData) return;
     if (currentDay <= 1) return;
     if (currentDay <= lastShownDayForSeason) return;
@@ -486,6 +504,8 @@ const CareerCalendar = () => {
     lastShownDayForSeason,
     openModal,
     pendingDayNoticeDay,
+    setPendingDayNoticeDay,
+    suppressNextDayNotice,
     setGameState,
   ]);
 
